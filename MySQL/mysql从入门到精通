@@ -1,0 +1,164 @@
+1. mysql基础
+
+    1. 数据库基本概念
+
+        磁盘文件——>层次模型——>网状结构——>(Codd)关系模型
+        DBMS是管理数据库的系统软件，实现数据库系统的各种功能，是数据库系统的核心。
+
+        DBA：负责数据库的规划、设计、协调、维护和管理等工作。
+
+        关系：二维表，行(row，称为记录)、列(column，称为属性、字段)次序并不重要。
+
+        主键(primary key)：用于唯一确定一个记录的字段，复合主键是有多个字段组合成一个主键，主键不能为空。
+
+        唯一键：一个或多个字段的组合，可以唯一标识本行，可以为空。
+
+        约束：
+            主键约束：唯一、非空，一张表只能有一个；
+            唯一键约束：唯一，可以存在多个；
+            外键约束：参考性约束；
+            检查性越苏：check
+
+        三层模型：
+            物理层 ——> SA(决定数据的存储格式，即RDBMS在磁盘上如何组织文件)
+            逻辑层 ——> DBA(描述存储什么数据，以及数据间存在什么样的关系)
+            视图层 ——> Coder(描述DB中的部分数据)
+
+        域domain：属性的取值范围
+
+        表：row，column
+
+        关系运算：选择、投影
+
+        数据库：表、索引、视图(虚表)、SQL、存储过程(procedure，无返回值)、函数(function，有返回值)、触发器(trigger)、事件调度器(event scheduler)、任务计划
+
+        事务(transaction)：多个操作被当作一个整体对待
+        ACID：
+            原子性(Atomicity)
+                整个事务中所有操作，要么全部完成，要么全部不完成，不可能停滞在中间某个环节。
+                事务在执行过程中发生错误，会被回滚到事务开始前的状态。
+            一致性(Consistency)
+                在事务开始之前和事务结束以后，数据库的完整性越苏没有被破坏。
+            隔离性(Isolation，又称独立性)
+                两个事务的执行是互不干扰的，一个事务不可能看到其他事务运行时，中间某一时刻的数据。
+            持久性(Durability)
+                事务完成以后，该事务对数据库所作的更改持久的保存在数据库中，并不会被回滚。
+
+        数据库操作：
+            数据提取(select)：在数据集合中提取需要的内容
+            数据变更(insert、delete、update)：变更数据库中的数据
+
+        应用程序指以数据库为基础的应用程序：DBMS——>RDBMS(关系型数据库管理系统)
+
+        设计数据库，遵从不同的规范要求，称为范式。各种范式呈递次规范，越高的范式数据库冗余越小。
+        六种范式：
+            第一范式(1NF)：无重复的列，每列都是不可分割的基本数据项，同列不能有多个值
+            第二范式(2NF)：属性完全依赖于主键，表每行可以被唯一地区分；须先满足第一范式
+            第三范式(3NF)：属性不依赖于主键外的属性，数据库表中不包含已在别表中存在的非主键信息(表之间的关联仅能通过主键)；须先满足第二范式
+            巴德斯科范式(BCNF)
+            第四范式(4NF)
+            第五范式(5NF)
+        六种范式，前者依次作为后者前提。数据库只需满足第三范式即可。
+
+        SQL(Structure Query Language)：结构化语言——SQL解释器——数据存储协议(应用层协议C/S：oracle<tcp:1521>、mysql<tcp:3306>、sql server<tcp:1433>)
+
+    2. mysql基础和应用结构
+
+        mysql特性：插件式存储引擎、单进程多线程
+
+        安装：服务端(mysql-server)和客户端(mysql)，yum安装，二进制安装，源码编译安装
+
+        提高安全性：运行mysql_secure_installation
+
+        服务端程序：mysqld、mysqld_safe、mysqld_multi
+
+        客户端程序：mysql、mysqldump、mysqlbinlog、mysqladmin……
+
+        非客户端类管理程序：myisamchk、myisampack……
+
+        配置文件：/etc/my.cnf、/etc/my.cnf.d/*.cnf
+
+        mysql命令选项：
+            -uUSERNAME：用户名；默认root
+            -hHOST：服务器主机；默认localhost
+            -pPASSWORD：用户密码；建议使用-p；默认为空密码
+
+        mysql用户账号由两部分组成'USERNAME'@'HOST',可使用%代替HOST整体或ip局部
+
+        运行mysql前通常修改的参数：
+            配置文件内[mysqld]后添加两个选项：
+                innodb_file_per_table = on  # 启用innodb存储引擎
+                skip_name_resolve = on      # 禁止主机名解析
+
+    3. mysql语言基础
+
+        sql语句不区分大小写(建议大写)，但字符串常量区分大小写；sql语句可单行或多行书写，以";"结尾；关键词不能跨多行或简写；可以用空格和缩进提高语句可读性
+
+        注释：
+            /*多行注释内容*/
+            -- 单行注释内容
+
+        mysql注释：#
+
+        数据库对象的命名规则:
+            1. 字母开头
+            2. 可包括数字字母和三个特殊字符(#_$)
+            3. 不要使用mysql的保留字
+            4. 统一Schema下的对象不能同名
+
+        mysql的数据类型:
+            字符型
+                定长:CHAR(#),BINARY(#) 前者不区分字符大小写,后者区分
+                变长:VARCHAR(#),VARBINARY(#)
+                文本:TINYTEXT,TEXT,MEDIUMTEXT,LONGTEXT
+                二进制:TINYBLOB,BLOB,MEDIUMBLOB,LONGBLOB
+            数值型
+                浮点:FLOAT,DOUBLE,REAL,BIT
+                整型:TINYINT,SMALLINT,MEDIUMINT,INT,BIGINT;DECIMAL
+            日期时间型
+                日期:DATE
+                时间:TIME
+                日期时间:DATETIME
+                时间戳:TIMESTAMP
+                年份:YEAR(2),YEAR(4)
+            内建类型
+                枚举:ENUM(E1,E2,...)
+                集合:SET
+
+        类型修饰符:
+            字符型:
+                NOT NULL,NULL,DEFAULT '默认字符',CHARSET SET '字符集',COLLATION '排序规则'
+            整型:
+                NOT NULL,NULL,DEFAULT 默认值,AUTO_INCREMENT,UNSIGNED
+            日期时间型:NOT NULL,NULL,DEFAULT '日期时间'
+
+        指令集(DML):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

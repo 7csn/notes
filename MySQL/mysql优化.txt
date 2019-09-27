@@ -1,0 +1,464 @@
+优化：时间换空间、空间换时间
+1. 表的优化
+    1. 定长变长分离
+        核心且常用字段，宜建成定长，放在一张表
+        变长字段（varchar、text、blob...），适合单放一张表，用主键与核心表关联起来
+    2. 常用字段和不常用字段分离
+	    结合网站具体业务分析，分析字段查询场景，查询度低的字段，单拆出来
+    3. 在一对多，需要关联统计的字段上，添加冗余字段
+	    例：查询某用户帖子数，增加一个帖子数字段，将查询时的统计操作分化到每次增贴上。
+2. 列的优化
+    1. 字段类型优先级
+        整型 > date,time > enum,char > varchar > blob,text
+        整型：定长，没有国家地区之分，没有字符集的差异
+        time：定长，运算快，节省空间。优于date，不需考虑时区，sql更方便
+        enum：
+            内部整型存储，起约束值目的
+            但与char联查，内部要经历串值转化
+            速度：enum&&enum > char&&char > enum&&(var)char
+            适合在数据量大时使用，节省IO
+        char：定长，考虑字符集和排序时的校对集
+        varchar：不定长，考虑字符集和排序时的校对集，速度慢
+        text/blob：无法使用内存临时表(排序等操作只能在磁盘上进行)
+    2. 长度够用即可，节省内存[整型选择、varchar长度...]
+    3. 尽量避免用null
+        因为null不利于索引，要用特殊字节标注，磁盘上占据空间更大(mysql5.7+有所改进，查询仍然不便)
+3. 索引优化
+    索引作用：快速查找、排序、分组
+    1. 索引类型
+        1. B-tree索引
+            二叉平衡数，例：和顶端比较，更大往右，更小往左，逐渐向下，直到获得结果
+        2. hash索引(适合memory表)
+            每个键，对应唯一性高的hash值，根据键对应的hash值存取
+            优点：
+                单个查询极快，通常只需1次IO。
+            缺点：
+                1. hash值唯一性不保证
+                2. 结果随机性高，无法对范围查询进行优化
+                3. 无法利用前缀索引
+                4. 排序无法优化
+                5. 必须回行，即通过索引拿到数据位置，必须回到磁盘中取数据
+        3. B-tree索引常见误区
+            1. 在where条件常用的列上都加索引
+                若是独立索引，只能用上一个
+            2. 多列建立联合索引
+                例：index(a,b,c)
+                    a为b索引前提，b为c索引前提，没有确定前提的值(非范围)，无法利用上索引
+    2. 聚簇索引和非聚簇索引
+        1. 非聚簇索引
+            索引是对数据行的引用
+        2. 聚簇索引
+            数据和主键放置在一起，其他索引放置的是对主键的引用
+                1. 主键索引，存储了索引值和行数据
+                2. 如无主键，取用unique key做主键；都没有，则生成一个内部的rowid做主键
+            优点：
+                根据主键查询条目时，不用回行
+            缺点：
+                碰到不规则(主键)数据插入，造成频繁页分裂(叶重，来回折腾)，速度慢
+        注：
+            myisam为非聚簇索引、innodb为聚簇索引
+    3. 索引覆盖
+        若查询的列恰好是索引的一部分，则不需回行，速度极快
+    4. 理想索引
+        1. 查询频繁
+        2. 区分度高
+        3. 长度小(索引长度直接影响索引文件大小，影响增删改查速度，间接影响查询速度)
+        4. 尽量能覆盖常用查询字段
+    5. 前缀索引
+        针对列中的值，从左往右截取部分建索引：
+            1. 截的越短，重复度越高，区分度越低，索引效果越不好
+            2. 截的越长，重复度越低，区分度越高，索引效果越好，但是增删改查变慢，并间接影响查询速度
+        在区分度和长度取得平衡：
+            select count(distinct left(field, n))/count(*) from dbn;
+                # field为设置索引的字段，dbn为表名
+        创建前缀索引：
+            ALTER TABLE tbn ADD KEY (field(n));  # tbn为表名，field为字段，n为长度
+        缺点：
+            无法使用前缀索引做排序、分组、覆盖扫描
+        对左前缀不易区分的字段：
+            1. 列内容倒过来存，并建立前缀索引
+            2. 伪hash索引效果
+                # 添加一个field的hash字段，并设置为索引，当查询field的时候，查询crcf
+                alter table tbn add crcf int unsignet not null;
+                update tbn set crcf=crc32(field);
+                alter table tbn add key index index_name (crcf);
+    6. 多列索引
+        必须结合实际业务场景，最好统计一段时间(2天以上)的查询语句，考虑列的查询效率和区分度
+    7. 添加索引
+        ALTER TABLE `tbn` ADD ...
+        1. 主键索引
+            ... PRIMARY KEY (`field`)
+        2. 唯一索引
+            ... UNIQUE (`field`)
+            CREATE UNIQUE INDEX index_name ON `tbn` (`field`)
+        3. 普通索引、前缀、多列
+            ... INDEX index_name(`f1`, `f2(n)`, ...)              # index_name为索引名
+            CREATE INDEX index_name ON `tbn` (`f1`, `f2(n)`, ...)
+        4. 全文索引
+            ... FULLTEXT (`field`)
+    8. 删除索引
+        主键索引：
+            alter table `tbn` drop primary key  # 删除主键索引，若无，删除首个唯一索引
+        其他索引：
+            drop index index_name on `tbn`
+            alter table `tbn` drop index index_name
+    9. 索引与排序
+        1. 索引覆盖，直接在索引上查询，有序，using index
+        2. 取出数据，形成临时表做filesort(文件排序，可能在内存，也可能在磁盘)
+        如果order by 索引，可以避免排序
+    10. 重复索引和冗余索引
+        重复索引：
+            在1个列或顺序相同的几个列建立了多个索引，成为重复索引，没有任何帮助，只会增大索引文件，降低速度
+        冗余索引：
+            两个索引覆盖的列有重叠、称为冗余索引；冗余索引常见
+    11. 索引碎片和维护
+        长期数据更改，索引文件和数据文件，都将产生空洞，形成碎片
+        可以通过一个对数据不产生实质影响的操作来修改表，如：
+            1. alter table `tbn` engine innodb  # 表本身是innodb，会重新整理
+            2. optimize table `tbn`             # 优化表
+        注：
+            修复表的数据及索引碎片，会将所有数据文件重新整理，非常耗费资源
+            表修改操作频繁，可按周、月修复；如果不频繁，则周期更长
+4. sql语句优化
+    sql语句耗费时间的地方：
+        1. 等待时间(被其他sql锁定)
+        2. 执行时间(执行更快，对其他sql锁定时间减少)
+    sql语句执行耗费时间的地方：
+        1. 查找 --> 快的沿着索引查找，慢的可能全表扫描
+        2. 取出 --> 查到行后，取出数据(sending data)
+    如何查询快：
+        1. 找得快 --> 联合索引的顺序，区分度，长度
+        2. 取少的行和列
+        3. 取的快，索引覆盖
+    切分查询：
+        按数据拆分成多次
+        例：插入1W条数据，可以1K为单位
+    分解查询：
+        按逻辑把多表连接查询分成多个简单sql
+    sql语句优化思路：
+        不查 > 少查 > 高效的查
+        不查：
+            通过业务逻辑来计算
+        少查：
+            尽量精确数据，少取行，少取列
+        高效的查：
+            尽量走索引、尽量少回行、尽量少在重叶上查
+    查看表结构：
+        desc tbn;
+    重置表结构：
+        truncate tbn;   # 清空表，并重置自增
+    新增字段：
+        alter table tbn add field type;
+    删除字段：
+        alter table tbn drop column field;
+    修改字段：
+        alter table tbn charge old_field new_field type;
+    修改字段数据类型：
+        alter table tbn alter column field new_type;
+    定量分析查的多少行，及是否沿着索引：
+        explain sql语句 \G
+    sql执行时间分析(mysql5.5+):
+        set profiling=on;
+        show profiles;
+        show profile for query n;   # 详细时间，n为query_id
+5. explain分析
+    id
+        # select编号
+    select_type
+        # 首个select：simple不含子查询，primary含子查询或派生查询
+        # 子查询：subquery、derived、union、union result
+    table
+        # 表名
+        # 表别名
+        # derived + select编号，派生表
+        # null直接计算的结果，不走表
+    type
+        # all           数据行扫描(未用上索引)
+        # index         索引全节点扫描：
+                            1. 用上索引数据，未用上索引查找
+                            2. 用索引排序，但是取所有节点
+        # range         索引范围扫描
+        # ref           通过索引，直接引用到数据行
+        # eq_ref        通过索引，直接引用某1行数据，常见于连接查询
+        # const|system  通过表优化机制，直接锁定数据
+        # null          查询不需表
+    possible_keys
+        # 可能用到的索引
+    key
+        # 实际用到的索引
+    key_len
+        # 使用的索引最大数量
+    ref
+        # 联查时，表之间的字段引用关系，通常单表为null
+    rows
+        # 估计扫描行数
+    Extra
+        # index             用到索引覆盖，效率非常高
+        # using where       光靠索引定位不了，还得where判断
+        # using temporary   用到临时表，group by于order by不同列或不同表时
+        # using filesort    文件排序(可能磁盘[text、blob]，也可能内存)
+6. SQL优化细节
+    1. in、exists
+        in型陷阱：
+            查询数据逐行与IN进行匹配，当查询数据行数越多，查询速度越慢
+        原因：
+            mysql查询优化器，对in型优化，改成exists子查询执行效果
+        改进：
+            用连接查询代替子查询(in/exists)，将IN内数据当做连接表
+    2. from子查询
+        注意：
+            内层from语句查询到的临时表没有索引
+        结论：
+            from返回内容要尽量少，需要在内存先排好序
+    3. 强制使用索引(不推荐)
+        min/max     在myisam/innodb表，通常经过优化
+        强制加索引：
+            select ... from use index(primary) where ...
+    4. count()优化
+        myisam对表行数进行了存储，没有条件时，count非常快；但是加了条件后，就不快了。
+        例：
+            千万数据，查主键id>=100数量
+            思路：
+                select count(*) from tbn where id >= 100;   # 慢
+                select count(*) from tbn;                   # 极快
+                select count(*) from tbn where id < 100;    # 快
+            结论：
+                select (select count(*) from tbn) - (select count(*) from tbn where id < 100);
+    5. group by 和 order by
+        分组必须先排序，排序要有索引，可以避免临时表及文件排序
+        分组和排序的列要一致，否则会引起临时表
+        查看临时表情况：
+            show status like '%tmp%';
+                created_tmp__tables
+                created_tmp_disk_tables
+                created_tmp_files
+                created_tmp__disk_files
+    6. union优化
+        union总是要产生临时表
+        1. union的子句条件要尽量具体(查更少的行)
+        2. 子句结果在内存里，要去重，去重要排序，可加all(union all)，在php中去重(逻辑上不应该取出重复行)。
+    7. limit及翻页优化
+        limit n,m   # 当n非常大时，效率极低
+        原因：
+            mysql不是跳过n行取m行，而是取出n+m行，放弃n行，返回m行
+        优化：
+            1. 业务上解决
+                不允许翻过100页，百度为例，只能翻到70+页
+            2. 不物理删数据(保持自增项完整)，用条件查询替换n
+                limit n,m   =>   where 自增项 > n limit m
+            3. 延迟关联
+                非要物理删除，limit n,m，不限制分页
+                select * from dbn limit n,m;
+                优化：
+                select id,name from dbn inner join (select id from dbn limit n,m) as tmp using(id);
+8. MySQL编程
+    1. 触发器
+        触发器能在表中的某些特定数据变化时，自动完成某些查询
+        触发器是一类特殊的事务，可以监视某种数据操作(增删改)，并触发相关操作(增删改)
+        1. 监视地点(table)
+        2. 监视事件(insert/update/delete)
+        3. 触发时间(before/after)
+        4. 触发事件(insert/update/delete)
+        创建触发器语法：
+            create trigger tgn
+            after/before insert/update/delete on tbn
+            for each row
+            begin
+            sql1;
+            ...
+            sqlN;
+            end
+        修改mysql结束符：
+            delimiter 新结束符  # 以$$为例
+        查看当前触发器：
+            show triggers[ \G];
+        删除触发器：
+            drop trigger tgn;
+        触发器引用行变量：
+            insert      # 用new表示新行，new.field为新行字段
+            delete      # 用old表示旧行，old.field为旧行字段
+            update      # 用new和old分别表示新行和旧行，new.field为新行字段，old.field为旧行字段
+        变量及条件判断：
+            格式：
+                if 表达式 then
+                ...
+                elseif 表达式 then
+                ...
+                else
+                ...
+                end if;
+            例：
+                订单表o
+                oid  gid  much
+                商品表g
+                gid  num
+                --------------------
+                create trigger tg1
+                before insert on o
+                for each row
+                begin
+                    select num into @num from g where gid = new.gid;    # 查出商品数量赋给变量
+                    if new.much > @num then                             # 限制购买上限
+                    set new.much = @num;
+                    end if;
+                end
+    2. 存储过程
+        php中函数无返回值，就是过程，mysql过程同理
+        创建mysql过程语法：
+            create procedure fn()   # fn为过程名称
+            begin
+            ...
+            end
+        调用储存过程：
+            call fn();
+        查看当前存储过程：
+            show procedure status \G;
+        删除存储过程：
+            drop procedure fn;
+        存储过程参数：
+            参数名 参数类型
+            例：
+                create procedure fn(n int)
+                begin
+                select * from o limit n;
+                end
+    3. 方法
+        创建方法：
+            create function fn() returns back_type  # back_type 返回类型
+            begin
+            ...
+            return ...
+            end
+        # 函数也可以有参数
+        函数调用：
+            fn();
+    4. 流程控制
+        1. if
+            if 表达式 then
+            ...
+            elseif 表达式 then
+            ...
+            else
+            ...
+            end if;
+        2. where
+            while 表达式 do
+            ...
+            end while;
+    5. MySQL主从复制与读写分离
+        读写比：select  /  insert + update + delete
+        读写分离：
+            读服务器作为写服务器的数据镜像
+            多台从服务器和主服务器保持数据一致
+            读操作请求从服务器，写操作请求主服务器
+        读写分离技术详情：
+            1. 数据库集群技术
+                集群由概念：
+                    1. sql节点
+                    2. 数据节点
+                    3. 管理节点
+                sql语句发送至sql节点，sql节点发往数据节点，再由管理节点完成数据节点与数据节点之间的同步
+                集群技术相对复杂，至少3种节点，4台服务器才能完成
+            2. 数据库复制 replication
+                实现原理：
+                    1. 主服务器运行语句，就产生一个二进制文件binlog
+                    2. 从服务器连接主服务器，不断读取主服务器的binlog
+                    3. 从主服务器读取到binlog，转换为自身可执行的relaylog
+                    4. 从服务器执行relaylog
+                实现步骤：
+                    1. 确保主服务器打开二进制日志功能
+                        这样，主服务器一旦有数据变化，立即产生二进制日志
+                    2. 从服务器开启二进制日志和relay日志功能
+                        这样，可以从主服务器读取binlog，并产生relaylog
+                    3. 在主服务器建立一个从服务器账号，并授予读binlog权限
+                    4. 指定从服务对应的主服务器，开启从服务器
+                具体实施：
+                    假设两台linux服务器，IP分别为201,202
+                    1. 201为master，202为slave做主从复制
+                    2. 保证主从3306端口互通
+                    3. 配置主服务器，打开binlog
+                        > vim /etc/my.cnf
+                            # 在[mysqld]下添加
+                            server-id=201         # 设置唯一ID
+                            log-bin=mysql-bin     # 开启二进制日志，取用户名为mysql-bin
+                            binlog-format=mixd    # 指定日志格式：mixd混合、row、statement
+                                                  # row 主磁盘怎么变，从磁盘怎么变
+                                                  # statement 主执行什么语句，从执行什么语句
+                        > /usr/local/mysql/bin/mysqladmin shutdown
+                        > /usr/local/mysql/bin/mysqld_salf --user=mysql &
+                    4. 配置从服务器，打开binlog和relaylog
+                        > vim /etc/my.cnf
+                            # 在[mysqld]下添加
+                            server-id=202           # 设置唯一ID
+                            relay-log=mysql-relay   # 开启relay日志，取用户名为mysql-relay
+                            read-only=1             # 设置只读
+                        > /usr/local/mysql/bin/mysqladmin shutdown
+                        > /usr/local/mysql/bin/mysqld_salf --user=mysql &
+                    5. 主服务器上创建相应的复制账号，供从服务器连接使用
+                        grant replication slave,replication client on *.* to repl@'192.168.1.%' identified by 'mmrepl';
+                        # repl => mmrepl  为从服务器登录账户密码
+                    6. 从服务器通过语句指定要复制的主服务器(可以一主多从，不能一从多主)
+                        change master to
+                        master_host='192.168.1.201',
+                        master_user='repl',
+                        master_password='mmrepl',
+                        master_log_file='mysql-bin.000001',
+                        master_log_pos=349;
+                        # mysql-bin.000001 349 是主服务器中的现状(show mater status)
+                    7. 启动从服务器功能
+                        start slave;
+                常用语句：
+                    show master status;     # 查看主服务器状态
+                    show slave status;      # 查看从服务器状态
+                    reset slave;            # 重置slave状态
+                    start slave;            # 启动slave状态(开始监听master变化)
+                    stop slave;             # 暂停slave状态
+                查看pid、log、sock文件目录：
+                    ps aux | grep mysql
+                设置sock文件路径：
+                    mysql -S 路径
+            3. 主主复制
+                2台mysql地位相等，都可以同步对方内容，相互复制
+                大致思路：
+                    1. 2台服务器都设置2进制日志和relay日志
+                    2. 都设置replication账号
+                    3. 都设置对方为自己的master
+                避免主键冲突：
+                    1台服务器1 3 5 7增长
+                    1台服务器2 4 6 8增长
+                    服务器1：
+                        set global auto_increment_increment = 2;
+                        set global auto_increment_offset = 1;
+                        set session auto_increment_increment = 2;
+                        set session auto_increment_offset = 1;
+                    服务器2：
+                        set global auto_increment_increment = 2;
+                        set global auto_increment_offset = 2;
+                        set session auto_increment_increment=2;
+                        set session auto_increment_offset = 2;
+                    注：设置要写到配置文件中，防止重启后失效
+                注：
+                    拥有从服务器的主主复制，也很常见
+            4. 被动模式下的主主复制
+                2台服务器地位一样，但其中一台为只读，并且业务中也只写某1台服务器。
+                好处：
+                    写入的服务器故障，能迅速的切换到从服务器
+                    或者处于检修等目的，可以方便地把写入功能切换到另一台服务器
+            5. 环形结构(概念性)
+                形成圆环，相邻互为主从
+                缺点：挂一台，全挂
+            6. 分发sql请求
+                1. 直接在php类中做判断，不用额外加软件
+                2. 用集群中间件，如官方的mysql_proxy，国产的amoeba
+            7. 中间件mysql_proxy实现(默认端口号4040)
+                1. 下载安装
+                    > curl http://mysql.cdpa.nsysu.edu.tw/Downloads/MySQL-Proxy/mysql-proxy-0.8.4-linux-glibc2.3-x86-64bit.tar.gz
+                    > tar zxf mysql-proxy-0.8.4-linux-glibc2.3-x86-64bit.tar.gz mysql-proxy
+                    # 已编译好，无需再编译
+                    > cd mysql-proxy
+                2. 利用mysql_proxy实现负载均衡
+                    > ./bin/mysql-proxy \
+                    --proxy-backend-address=192.168.1.201:3306 \
+                    --proxy-read-only-backend-address=192.168.2.202:3306
+                    简写：
+                        ./binmysql-proxy -b=192.168.1.201:3306 -r=192.168.2.202:3306

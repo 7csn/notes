@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>websocket</title>
+</head>
+<body>
+<script>
+    var webSocket = new WebSocket('ws://{host}:{port}');
+    webSocket.onopen = function (evt) {
+        console.log('连接成功');
+    }
+    webSocket.onclose = function (evt) {
+        console.log('关闭');
+    }
+    webSocket.onmessage = function (evt) {
+        console.log('设置信息:' + evt.data);
+    }
+    webSocket.onerror = function (evt) {
+        console.log('错误');
+    }
+</script>
+</body>
+</html>

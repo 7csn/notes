@@ -1,0 +1,22 @@
+服务器域名		$_SERVER['SERVER_NAME']
+IP地址			(empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_HOST'] : $_SERVER['SERVER_ADDR'])
+服务器操作系统		php_uname()(简版：PHP_OS)
+服务器解译引擎(运行环境)	$_SERVER['SERVER_SOFTWARE']
+PHP版本			PHP_VERSION
+mysql版本		select version() as v
+安装目录[当前]		__DIR__
+脚本超时时间		ini_get('max_execution_time')
+
+GD			$gd = (function_exists('gd_info') ? gd_info() : []; return empty($gd['GD Version']) ? '未安装' : $gd['GD Version'];
+MySQL			function_exists('mysql_connect')
+upload上限		ini_get('file_uploads') ? ini_get('upload_max_filesize') : 'unknow'
+session			function_exists('session_start')
+磁盘空间			function_exists('disk_free_space') ? disk_free_space($dir) : 'unknow'
+
+文件目录是否可读		is_readable($path)
+文件是否可写		is_writable($file)
+目录是否可写		$fp = @fopen($file, 'w');
+			if ($fp) { fclose($fp); return @unlink($file); } else { return false; }
+文件是否可执行		is_executable($file)
+
+数据库主机(默认)		127.0.0.1(5.4以下localhost)

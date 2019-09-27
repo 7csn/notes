@@ -1,0 +1,40 @@
+main配置段：
+    类别：
+        正常运行必备的配置
+        优化性能相关的配置
+        用于调试、定位问题的配置
+
+    正常运行必备的配置：
+        1. user USERNAME [GROUPNAME];
+            指定用于运行worker进程的用户和组
+            > user nginx nginx
+        2. pid /PATH/TO/PID_FILE;
+            指定nginx进程的pid文件路径
+            > pid /var/run/nginx.pid
+        3. worder_rlimit_nofile #;
+            指定一个worker进程所能打开的最大文件描述符数量
+        4. worker_rlimit_sigpending #;
+            指定每个用户能够发往worker进程的信号的数量
+
+    性能优化相关的配置：
+        1. worker_process #;
+            worker进程的个数;通常应该为物理CPU核心数量减1;
+            值可以为auto，实现自动设定，较老的版本不支持
+        2. worker_cpu_affinity CPUMASK CPUMASK ...;
+            CPUMASK:
+                0001
+                0010
+                0100
+                1000
+            绑定前三个CPU核心
+            > worker_cpu_affinity 00000001 00000010 00000100;
+        3. worker_priority nice;
+            [-20, 19]
+
+    调试、定位问题的配置：
+        1. daemon on|off;
+            是否以守护进程方式启动nginx
+        2. master_process on|off;
+            是否以master/worker模型运行nginx
+        3. error_log /PATH/TO/ERRORLOG level;
+            错误日志文件及其级别；出于调试的需要，可以设定为debug；但debug仅在编译时使用了“--with-debug”才有效

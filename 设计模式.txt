@@ -1,0 +1,234 @@
+1.工厂模式
+    1.1 简单工厂
+	工厂有一个对象车间，生产指定类型的对象
+	例：
+	    class A {}
+	    class B {}
+	    class F {
+		static function o($t) {
+		    switch ($t) {
+			case 'A':
+			    return new A();
+			    break;
+			case 'B':
+			    return new B();
+			    break;
+			default:;
+		    }
+		}
+	    }
+	优点：要什么对象，创建什么对象
+	缺点：所有产品生产在一个车间，不够灵活，扩展性差
+    1.2 抽象工厂
+	工厂有各类子工厂，由相应类型的子工厂车间生产对象
+	例：
+	    class A {}
+	    class B {}
+	    interface F {
+		static function o();
+	    }
+	    class AF implements F {
+		static function o() {
+		    return new A();
+		}
+	    }
+	    class BF implements F {
+		static function o() {
+		    return new B();
+		}
+	    }
+	优点：子工厂各司其职，相对灵活；子工厂可继承，可重写；
+	缺点：工厂类随着产品类增加而增加
+    注：这里只区分所有对象；而不是区分不同类型对象，再细分同类型对象
+2.单例模式
+    类静态创建自身唯一对象，并防止外界直接创建
+    例：
+	class S {
+	    static $me;
+	    static function o() {
+		if (is_null(self::$me)) {
+		    self::$me = new self;
+		}
+		return self::$me;
+	    }
+	}
+3.观察者模式
+    观察者群体观察某主题，当主题发生变化时，引发观察者行为
+    例：
+	interface Zhuti {
+	    function add();
+	    function del();
+	    function notify();
+	}
+	interface See {
+	    function act();
+	}
+	class zt implements Zhuti {
+	    public $_see = [];
+	    function add(See $see) {
+		in_array($see, $_see) || $_see[] = $see;
+	    }
+	    function del(See $see) {
+		$k = array_search($see, $_see);
+		$k === false || array_splice($_see, $k, 1);
+	    }
+	    function notify() {
+		foreach ($_see as $see) {
+		    $see->act();
+		}
+	    }
+	}
+	class A implements See {
+	    function act() {}
+	}
+	class B implements See {
+	    function act() {}
+	}
+4.责任链模式
+    责任链包含级别、上级（、下级）、事件处理逻辑、事件处理，级别不够提交上级（，级别超过指派下级），级别对应则自己处理。
+    事件提交责任链某级（有向上功能，最低级；有向下级功能，最高级；两者都有，任一级），逐层传递，直找到对应级别负责处理。
+    例：
+	class A {
+	    function xz($n) {
+		if ($this->power < $n) {
+		    $top = new $this->top;
+		    return $top->xz($n);
+		} elseif ($this->power > $n) {
+		    $bottom = new $this->bottom;
+		    return $bottom->xz($n);
+		} else {
+		    return $this->run();
+		}
+	    }
+	}
+	class A1 extends A {
+	    public $power = 1;
+	    public $top = 'A2';
+	    function run() {
+		return 'A1 do this';
+	    }
+	}
+	class A2 extends A {
+	    public $power = 2;
+	    public $top = 'A3';
+	    public $bottom = 'A1';
+	    function run() {
+		return 'A2 do this';
+	    }
+	}
+	class A3 extends A {
+	    public $power = 3;
+	    public $bottom = 'A2';
+	    function run() {
+		return 'A3 do this';
+	    }
+	}
+5.策略模式
+    购买一组产品（每个产品有多家商店生产），通过策略商店，指定各产品的来源商店
+    class A {
+	function x() {}
+	function y() {}
+    }
+    class B {
+	function x() {}
+	function y() {}
+    }
+    class CL {
+	function __construct($x, $y) {
+	    $this->clx = $x;
+	    $this->cly = $y;
+	}
+	function getX() {
+	    $this->clx->x();
+	}
+	function getY() {
+	    $this->cly->y();
+	}
+    }
+6.装饰器模式
+    装饰器有很多子类，可以对产品进行各种装饰
+    例：
+	//接口
+	interface Api {
+	    function make();
+	}
+	//装饰器基类
+	class Zsq implements Api {
+	    public $o;
+	    function __construct($o) {
+		$this->o = $o;
+	    }
+	    function make() {}
+	}
+	//被装饰类
+	class Base implements Api {
+	    public $z = [];
+	    function make() {
+		$this->z[] = 'Base';
+		return $this;
+	    }
+	}
+	//装饰器
+	class Zsq1 extends Zsq {
+	    function make() {
+		$o = $this->o->make();
+		$this->z[] = 'Zsq1';
+		return $o;
+	    }
+	}
+	class Zsq2 extends Zsq {
+	    function make() {
+		$o = $this->o->make();
+		$this->z[] = 'Zsq2';
+		return $o;
+	    }
+	}
+7.适配器模式
+    适配器充当两个不匹配接口的桥梁
+    例：
+	class Word {
+	    function pos() {}
+	}
+	class Baidu {
+	    function pos() {
+		$w = new Word;
+		return $this->trans($w->pos()); 
+	    }
+	    function trans() {}
+	}
+8.桥接模式
+    多维度由乘变加，各个维度信息组合成全新的信息
+    例：
+	class Msg {
+	    function send($to , $cont) {}
+	}
+	class Zhan extends Msg {
+	    function send($to , $cont) {
+		return  $cont . '站内发给' . $to;
+	    }
+	}
+	class Email extends Msg {
+	    function send($to , $cont) {
+		return  $cont . 'Email发给' . $to;
+	    }
+	}
+	class Sms extends Msg {
+	    function send($to , $cont) {
+		return  $cont . '短信发给' . $to;
+	    }
+	}
+	class Common  {
+	    function send($cont) {
+		return  '慢速:' . $cont;
+	    }
+	}
+	class Warning {
+	    function send($cont) {
+		return  '中速:' . $cont;
+	    }
+	}
+	class Danger {
+	    function send($cont) {
+		return  '急速:' . $cont;
+	    }
+	}

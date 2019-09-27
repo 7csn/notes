@@ -1,0 +1,178 @@
+MySQL：关系型数据库
+NoSQL：非关系型数据库(not only sql),存储方式key-value,常用memcache、redis、MongoDB.
+
+1. 编译memcache
+    1. yum方式
+        > yum -y install memcached
+    2. 编译安装
+        下载安装libevent依赖：
+            > https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz
+            > tar zxf libevent-2.1.8-stable.tar.gz libevent
+            > cd libevent
+            > ./configure --prefix=/usr/local/libevent
+            > make && make install
+        下载安装memcached：
+            > wget http://www.memcached.org/files/memcached-1.5.4.tar.gz
+            > tar zxf memcached-1.5.4.tar.gz memcached
+            > cd memcached
+            > ./configure --prefix=/usr/local/memcached --with-libevent=/usr/local/libevent
+            > make && make install
+2. 启动memcache
+    常用参数：
+        -help   查看命令
+        -p      占用端口(默认11211)
+        -l      ip地址
+        -u      启动用户(不能用root)
+        -m      分配内存(默认64M)
+        -c      连接上限(默认1024)
+        -f      增长因子(默认1.25)
+        -vvv    开启调试模式(可查看slab和chunk信息)
+        -M      添加此项禁用LRU机制
+        &       末尾指定后台启动
+    启动：
+        /usr/local/memcached/bin/memcached -u memcached &
+3. 客户端连接memcache
+    > telnet 116.62.131.49 11212
+    # 回车 按ctrl+[键 回车
+    # 开始操作memcache
+4. 命令操作memcache
+    常规参数：
+        key     键名
+        flag    标志(非负整数)
+        expire  有效期(秒，超过30天视为时间戳，0代表不自动失效)
+        length  值长度
+    添加：
+        add key flag expire length
+            > add myname 0 0 6
+            > chenda
+            STROED  # 存储成功 NOT_STORED 存储失败
+    替换：
+        replace key flag expire length  # 类似add
+    设置：
+        set key flag expire length  # 类似add和replace，无则增，有则改
+    获取：
+        get key
+            > get myname
+            VALUE myname 0 6    # VALUE key flag length
+            chenda              # 值
+            END
+    删除：
+        delete key[ timeout]  # timeout表示多少秒内删除，该时间段，禁止访问此key
+            > delete myname
+            DELETE
+    删除全部：
+        flush_all
+    值升：
+        incr key num   # key的值增加num
+    值降：
+        decr key num
+    查看统计信息：
+        stats
+    关闭连接：
+        quit
+5. memcache统计信息
+    # 重要
+        STAT curr_items             # 目前活跃key数量
+        STAT total_items            # 总共设置的key数量
+        STAT cmd_get                # 执行的get操作数
+        STAT cmd_set                # 执行的set操作数
+        STAT get_hits               # 命中数
+        STAT get_misses             # 未命中数(过期或删除)
+        STAT evictions              # 因空间删除的key数量
+    STAT pid                    # 服务进程号码
+    STAT uptime                 # 运行时间总和
+    STAT time                   # 当前时间戳
+    STAT pointer_size           # memcache服务器的字长度位
+    STAT curr_connections       # 目前连接数
+    STAT total_connections      # 总连接数
+    STAT connection_structures  # 连接结构树
+    STAT bytes_read             # 读取字节数
+    STAT bytes_written          # 写入字节数
+    STAT limit_maxbytes         # 可用空间上限
+    STAT threads                # 线程数
+6. php关联memcache
+    1. yum方式
+        > yum -y install php-memcached
+    2. 编译安装
+        PHP扩展地址：https://pecl.php.net/
+        下载解压扩展：
+            > wget https://pecl.php.net/get/memcache-2.2.7.tgz
+            > tar zxf memcache-2.2.7.tgz memcache
+        编译安装扩展：
+            > cd memcache
+            > /usr/local/php/bin/phpize
+            > ./configure --with-php-config=/usr/local/php/bin/php-config
+            > make && make install
+        修改php.ini配置，新增：
+            extension = /usr/local/php/extensions/no-debug-non-zts-20131226/memcache.so
+7. php连接memcache
+    创建memcache对象：
+        $mem = new Memcache;
+    连接memcache：
+        1. 单个
+            $mem->connect(ip, port);
+        2. 多个(顺序不能乱)
+            $mem->addServer(ip1, port1);
+            $mem->addServer(ip2, port2);
+            ...
+8. php操作memcache函数
+    add(key, val, flag=0, expire=0);        // 不存在则增加，存在则报错
+    replace(key, val, flag=0, expire=0);    // 存在则替换，不存在则报错
+    set(key, val, flag=0, expire=0);        // 存在则替换，不存在则增加
+    get(key);                               // 获取值
+    increment(key, num=1);                  // 值增，默认增幅1
+    decrement(key, num=1);                  // 值减，默认减幅1
+    delete(key, time=0);                    // 指定时间内删除key，删除之前，禁用
+    flush();                                // 清空key
+    close();                                // 关闭连接
+    getStats();                             // 统计信息
+9. memcache存储机制
+    1. 存储类型
+        memcache存储以键值方式存储，只能存string型，单个键上限1M，没有持久化。
+    2. 存储方式
+        将内存分为1M的slab class
+        每个slab class由多个同等大小的chunk组成
+        首个slab的chunk为96byes，后续slab的chunk大小依次按比例(增长因子)增长。
+        每个chunk最多只能存一个数据。
+        当一个数据存取时，计算归属chunk size，如果该size的chunk用光，则以LRU机制踢掉旧数据，再存入。
+    注：
+        memcache只能存string型，没有持久化。
+        memcache将内存分为1M的slab块，每个slab由多个同等大小的chunk构成.
+        首个slab的chunk为96bytes，后续依次按比例增长(增长因子)。
+10. memcache删除机制
+    1. 懒惰模式
+        数据过期，仍然存在，需要被访问，才会删除。
+        session文件懒惰删除。
+        memcache内存懒惰删除。
+    2. LRU机制
+        LRU：least recently use 最近很少被使用的数据
+        空间不足，memcache仍可以存数据，执行LRU机制。
+        若不想使用LRU机制，启动memcache时带参数-M。
+        注：LRU机制可以踢掉因增减m服务器产生的懒惰数据。
+11. session存于memcache
+    session存于硬盘文件，两个服务器session不能互通，如果存于memcache，则可以互相通信。
+    具体操作：
+        ini_set("session.save_handler", "memcache");
+        ini_set("session.save_path", "tcp://ip1:port1;tcp://ip2:port2;...");
+12. memcache分布式问题
+    1. 缓存雪崩
+        memcache服务器关闭或数据清空，导致所有数据压力施加到mysql上，迅速压垮mysql。
+        解决方案：
+            1. 单台m服务器不要存太多数据，轻易不要flush_all
+            2. 有效期设置一定范围内随机(防止高并发数据同时失效)
+            3. 负载最低的时候，刷新单台m服务器缓存
+    2. 缓存无底洞
+        用户数据存于多台m服务器，memcache连接频率过大，新增m服务器，依然如此。
+        解决方案：
+            同用户信息尽量存于一台m服务器
+    3. 永久数据被踢
+        因chunk存储方式及懒惰删除模式，当LRU机制执行时，那些数据过期是未知的，故只会优先删除上次活动时间最久的数据。
+13. 分布式集群算法
+    1. 取模(余)算法
+        整数化key % 服务器数量  =>  服务器落点
+        n台服务器，宕掉1台后，命中率减为1/n，n越大，命中率降得越厉害。
+    2. 一致性哈希算法
+        原理：
+            1. 每台服务器作为一个真实节点，每个真实节点创建N个虚拟节点，虚拟节点包含服务器ip、port信息。
+            2. 通过哈希算法计算(随机)出所有虚拟节点对应的正整数，并将结果顺序(由小到大)组成圆环
+            3. 针对每个key，通过哈希算法计算出对应正整数，对圆环最大正整数取余，返回余数在圆环临近更大数对应的虚拟节点对应的真实节点，即确定了每个key的存取的服务器

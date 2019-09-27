@@ -1,0 +1,5 @@
+wget https://npm.taobao.org/mirrors/node/v8.9.3/node-v8.9.3-linux-x64.tar.xz
+xz -d node-v8.9.3-linux-x64.tar.xz
+tar -xf node-v8.9.3-linux-x64.tar.xz node
+ln -s node/bin/node /usr/local/bin/node
+ln -s node/bin/npm /usr/local/bin/npm

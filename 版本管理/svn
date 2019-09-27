@@ -1,0 +1,70 @@
+svn安装：
+    客户端：百度TortoiseSVN，下载并安装
+        在项目中右键，看见有SVN checkout..和Tortoise SVN即安装成功
+    服务器：
+        > yum -y install subversion
+签出(相当于下载项目到本地)：
+    右键SVN checkout，输入目标地址(svn://ip/svn项目名)及存放目录，点击确定；输入用户名密码，点击确定。
+文件图标：
+    绿√：正常
+    红！：编辑后的文件或目录
+    黄！：提交过程冲突
+    蓝✚：待提交文件或目录
+    蓝？：不在变更列表
+    淡—：忽略文件或目录
+增加：
+    选中文件右键Add
+    右键SVN Commit
+删除：
+    尚未入库，直接删除
+    已入库，选中右键delete，右键SVN Commit
+改名：
+    选中文件右键rename，右键SVN Commit
+更新：
+    右键SVN Update
+提交：
+    右键SVN Commit
+忽略目录或文件：
+    选中右键Add to ignore list->cache
+显示日志：
+    右键Show log
+检查更新：
+    右键Check for modifications
+版本库浏览：
+    右键Repo-browser
+还原：
+    选中右键SVN to reversion
+冲突解决：
+    1. 重下下来，修改后，上传。
+    2. 选中右键Editonficts，协商统一后提交。
+svn服务器搭建：
+    创建仓库
+        > svnadmin create /data/svn/csn
+        > cd /data/svn/csn
+        > vim conf/svnserve.conf
+            密码文件
+            password-db = passwd
+            授权文件
+            authz-db = authz
+    设置用户和分组
+        > vim conf/passwd
+            [users]
+            php1 = php111111
+            front1 = front111111
+            front2 = front222222
+            [group]
+            front = front1,front2
+    设置权限
+        > vim conf/authz
+            [groups]
+            [csn:/]
+            @front = rx
+            php1 = rx
+    启动所有svn站点
+        > pkill -9 svn
+        > svnserve -d -r /data/svn
+命令行签出：
+    > svn checkouut svn://ip/svn项目
+------------------------------------------
+svn：集中式，只有一个仓库，其他svn只有工作区和暂存区。
+git：分布式，每个git都是一个单独的仓库，可以相互建立远程联系，进行推送。

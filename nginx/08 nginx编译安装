@@ -1,0 +1,35 @@
+http://nginx.org/packages/
+nginx安装配置：
+    稳定版：stable
+    主线版：mainline
+
+    编译环境:
+    > yum -y grouplist "Development Tools" "Server Platform Development"
+
+    安装包：
+        The GNU Compiler Collection
+        The PCRE library
+        The zlib library
+        OpenSSL
+        > yum -y install openssl-devel zlib-devel pcre-devel
+
+    创建nginx用户：
+        > useradd -r nginx
+
+    nginx配置编译：
+        master进程通常只能root用户操作
+        > cd nginx66
+        > ./configure \
+        --prefix=/usr/local/nginx \
+        --conf-path=/etc/nginx/nginx.conf \
+        --user=nginx \
+        --group=nginx \
+        --error-log-path=/var/log/nginx/error.log \
+        --http-log-path=/var/log/nginx/acess.log \
+        --pid-path=/var/run/nginx/nginx.pid \
+        --lock-path=/var/lock/nginx.lock \
+        --with-http_ssl_module \
+        --with--http_stub_status_module \
+        --with-http_gzip_static_module \
+        --with-debug
+        > make && make install

@@ -1,0 +1,40 @@
+nginx: 服务器、反向代理
+
+Web服务：http协议
+    http协议：80/tcp，超文本传输协议，^1.0引入MIME
+        html: 超文本标记语言
+        MIME： 多用户互联网邮件扩展（将非文本编码成文本，接收方接收后，能还原媒体格式的编码方案）
+            major/minor 主次类型
+                text/plain
+                image/jpeg
+
+        URL: scheme://serverr[:port]/path/to/source + 参数、片段
+            互联网每个资源至少有一个URL进行标识
+
+        http事务：request(请求)、response(响应)
+            request:
+                <method> <URL> <version>
+                <HEADERS> (通用、请求、响应、实体、扩展)
+
+                <body>
+            response:
+                <version> <status> <reason phrase>
+                <HEADERS>
+
+                <body>
+            协议格式：文本、二进制
+        method:
+            GET、HEAD、POST、PUT、DELETE、TRACE、OPTIONS
+        status:
+            1xx: 信息类
+            2xx: 成功类，200
+            3xx: 重定向类，301、302、304
+            4xx: 客户端错误类，403、404
+            5xx: 服务器端错误，502
+        HEADER：
+            通用首部
+            请求首部
+                If-Modified-Since、If-None-Match
+            响应首部
+            实体首部：描述编码格式或编码语言
+            扩展首部

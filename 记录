@@ -1,0 +1,52 @@
+clipboard.js
+    苹果无效：
+        1. 非可点击元素动态绑定无效，将所选元素添加cursor:pointer样式或onclick=""
+        2. 复制目标元素需为可视状态
+php时间戳上限：
+    2147483647
+    2038-01-19 11:14:07
+nginx 虚拟机options开放：
+   if ($request_method = OPTIONS) {
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Headers Origin,X-Requested-With,Content-Type,Accept;
+        return 200;
+    }
+No input file specified.
+    1. 常规配置错误
+    2. 权限不足访问
+    3. open_basedir限制了php访问范围，nginx和php都可以配置(不限制，则注释)
+        nginx：
+            fastcgi_param PHP_ADMIN_VALUE "open_basedir=路径1:路径2:路径3/";    # 后面加 / 表示不包括子目录
+        php：
+            open_basedir=路径1:路径2:路径3/
+    4. 路径解析异常，如2018新版phpstudy将特殊意义字符进行了解析，如\t变成空格
+pdo mysql 连接
+    查看连接进程：show processlist[ -- 唯一标识];
+    关闭进程：kill 进程ID;
+ajax多维数组上传
+    n维键值对：
+        string：K1[K2][K3]...[Kn] = Vn
+        FormData: formData.append(K1[K2][K3]...[Kn], Vn);
+header:
+    w3c规定，当请求的header匹配以下不安全字符时，将被终止
+          Accept-Charset
+          Accept-Encoding
+          Connection
+          Content-Length
+          Cookie
+          Cookie2
+          Content-Transfer-Encoding
+          Date
+          Expect
+          Host
+          Keep-Alive
+          Referer
+          TE
+          Trailer
+          Transfer-Encoding
+          Upgrade
+          User-Agent
+          Via
+uniqid(prefix,more_entropy)：基于以微秒计的当前时间，生成一个唯一的 ID。
+    prefix	        可选。为 ID 规定前缀。如果两个脚本恰好在相同的微秒生成 ID，该参数很有用。
+    more_entropy	可选。规定位于返回值末尾的更多的熵。

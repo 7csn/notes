@@ -1,0 +1,173 @@
+nginx命令环境变量：
+    > vim /etc/profile.d/nginx.sh
+    写入内容：
+        exprot PATH=/usr/local/nginx/sbin:$PATH
+
+hosts文件路径：/etc/hosts
+
+nginx配置中的正则：~正则
+
+http配置段：
+
+1. ngx_http_core_module
+
+    套接字或主机相关指令
+    1. server{}
+        定义一个虚拟主机
+        server{
+            listen PORT;
+            server_name NAME;
+            root /PATH/TO/DOCUMENTROOT
+        }
+        ...
+
+        注意：
+            1. 基于port
+                listen指令监听在不同的端口
+            2. 基于hostname
+                server_name指令指向不同的主机名
+    2. listen
+        listen address[:port][default_server][ssl][http2|spdy]
+        listen port[default_server][ssl][http2|spdy]
+            adress支持*
+            default_server：设置默认虚拟主机；用于基于IP地址，或使用了任意不能对应于任何一个server的name时锁返回的站点
+            ssl：用于限制只能通过ssl连接提供服务
+            spdy: SPDY protocol(speedy),在编译了spdy模块的情况下，用于支持SPDY协议
+            http2：http varsion 2，在spdy基础之上，spdy濒临淘汰
+    3. server_name NAME NAME...;
+        NAME支持正则和通配符*，顺序如下：
+            1. 首先做精确匹配，例如：www.baidu.com
+            2. 匹配左侧通配符，例如：*.baidu.com
+            3. 匹配右侧通配符，例如：www.baidu.*
+            4. 正则表达式，例如：~^.*\.baidu\.com$
+            5. default_server
+    4. tcp_nodelay on|off;
+        对keeplive模式下的连接是否使用TCP_NODELAY选项（建议启用）
+    5. tcp_nopush no|off;
+        是否启用TCP_NOPUSH(FREEBSE)或TCP_CORK(Linux)选项；仅在sendfile为on时有用（建议不启用）
+    6. sendfile on|off;
+        是否启用sendfile功能
+    7. root #用于server，也可以用于server>location中
+        设置web资源的路径映射；用于指明请求的URL所对应的文档的目录路径
+
+    8. location [=|~|~*|^~]uri{...}
+        location @name{...}
+        功能：允许根据用户请求的URI来匹配定义的各location，匹配到时，此请求将被响应的location块中的配置所处理，简言之，即用于需要用到专用配置的uri提供特定配置
+            =   URI精确匹配
+            ~   正则表达式匹配，区分字符大小写
+            ~*  正则表达式匹配，不区分字符大小写
+            ^~  URI左半部分匹配，不区分大小写
+            匹配优先级：= > ^~(无正则) > ~|~* > 不带符号的URL；当优先级一致，匹配到的越多优先
+    9. alias
+        只能用于location中，定义路径别名
+        和root区别：
+            root：路径为对应的location的'/'
+            alias：路径为对应的location的@name
+    10. index
+        默认主页，用于http、server、location，范围越小，优先级越高
+    11. error_page code code ... [=[response]] url;
+        自定义错误页面
+        error_page 404 501 =200 /error.html #404和501错误以200响应
+    12. try_files
+        try_files file file ... url;    #最后uri必须由其它location定义，以免死循环
+        try_files file file ... =code;
+        用于server、location，依次找file，返回首个找到的资源；若均不存在，则跳转至最后的uri或返回最后的状态码
+
+    客户端请求相关配置：
+    13. keepalive_timeout timeout;  #默认75s
+        设置keepalive连接的超时时长；0表示禁止长连接
+    14. keepalive_requests number;
+        在keepalived连接上所允许请求的最大资源数量；默认为100
+    15. keepalive_disable none|browser ...;
+        指明禁止为何种浏览器使用keepalive功能
+    16. send_timeout #;
+        发送响应报文的超时时长，默认60s
+    17. client_body_buffer_size size;
+        接收客户端请求报文body的缓冲区大小；默认为16k；超出时，移存至磁盘上
+    18. client_body_temp_path path[level1 [level2 [level3]]];
+        设定用于存储客户端请求body的临时存储路径及子目录结构和数量
+
+    对客户端请求进行限制：
+    19. limit_excpet METHOD{...}
+        对指定范围之外的其他方法进行访问限制
+    20. limit_rate speed;
+        限制客户端每秒所能传输的字节数，默认为0表示无限制
+
+    文件操作优化相关的配置：
+    21. aio on|off; #是否启用异步IO模式
+    22. directio size|off;
+    23. open_file_cache off;
+        open_file_cache max=N[inactive=time];
+            nginx可以缓存以下三种信息：
+                1. 文件描述符、文件大小和最近一次的修改时间
+                2. 打开的目录结构
+                3. 没有找到或没有文件操作权限的文件的相关信息
+            max=N表示可缓存的最大条目上限；一旦达到上限，则会使用LRU算法从缓存中删除最近最少时间的缓存项
+            inactive=time:在此处指定时长内没有被访问过的缓存项为非活动缓存项，因此直接删除
+    24. open_file_cache_errors on|off;
+        是否缓存找不到其路径的文件，或没有权限没有权限访问的文件相关信息
+    25. open_file_valid time;
+        每隔多久检查一次缓存中缓存项的有效性；默认为60s
+    26. open_file_cache_min_uses number;
+        缓存项在非活动期限内最少应该被访问的次数
+
+2. ngx_http_access_module（基于IP的访问控制）
+    27. allow address|CIDR|unix:|all;
+    28. deny address|CIDR|unix:|all;
+    应用上下文：http,server,location,limit_except
+
+3. ngx_http_auth_basic_module（basic认证）
+    29. auth_basic string | off;
+        使用http basic认证协议对用户进行认证
+    30. auth_basic_user_file file;
+        实现用户认证的账号文件[apache创建：htpasswd -c -m xxx/xxx 用户名 #-c创建 -m增改]
+            文件格式:
+                usr:pwd
+                usr:pwd:comment
+            密码格式：
+                1. encrypted with the crypt() function
+                2. md5加密
+
+4. ngx_http_log_module（访问日志）
+    31. log_format name [escape=default|json] string ...;
+        日志格式及其名称；日志格式一般通过调用内置变量来定义
+    32. access_log path [format [buffer=size] [gzip[=level]] [flush=time] [if=condition]];
+        access_log off;
+            访问日志文件路径，格式名称以及缓存大小和刷写时间间隔
+    33. open_log_file_cache max=N [inactive=time] [min_uses=N] [valid=time];
+        open_log_file_cache off;
+
+5. ngx_http_stub_status_module
+    34. stub_status;
+        通过指定的url访问stub_status
+            例：
+                Active connections: 291
+                server accepts handled requests
+                 16630948 16630948 31070465
+                Reading: 6 Writing: 179 Waiting: 106
+            Active connections  当前活动的客户端连接数
+            accepts             已接受的连接数量
+            handled             已处理完的连接数量
+            requests            客户端总请求数
+            Reading             正在读取的客户端请求数
+            Writing             正向其发送响应报文的连接数
+            Waiting             等待其发出请求的空闲连接数
+
+6. ngx_http_referer_module（基于请求报文中的Referer首部的值做访问控制）
+    35. referer_hash_bucket_size size;
+    36. referer_hash_max_size size;
+    37. valid_referers none | blocked | server_names | string ...;
+        none：请求报文不存在referer首部
+        blocked：请求报文中存在referer首部，但其没有有效值，或其值非以http://或https://开头
+        server_names：其值为一个主机名
+        arbitrary string：直接字符串，可以使用*通配符
+        regular expression：以~起始的正则
+        内置变量：$invalid_referer（所有不符合valid_referers指定定义的引用请求均为不合法引用）
+
+        例：
+            valid_referers none blocked server_names
+                           *.example.com example.* www.example.org/galleries/
+                           ~\.google\.;
+            if ($invalid_referer) {
+                return 403;
+            }

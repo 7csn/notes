@@ -1,0 +1,49 @@
+session集群共享方案：
+
+1. 同一用户请求转发到同一服务器
+
+2. session变化，广播同步到所有服务器
+
+3. 使用redis、memcache缓存session
+
+4. session持久化，存于数据库中
+
+5. nginx中的ip_hash技术
+
+    upstream nginx.example.com
+        {
+             server 192.168.74.235:80;
+             server 192.168.74.236:80;
+             ip_hash;
+        }
+        server
+        {
+             listen 80;
+             location /
+             {
+                proxy_pass   http://nginx.example.com;
+             }
+        }
+
+    注：nginx须为最前端服务器；后端不能有其它负载均衡方式
+
+6. upstream_hash
+
+
+session 跨域、集群共享
+    核心问题：
+        1. 会话ID共享
+        2. 会话ID映射session值
+    解决：
+        会话共享：
+            1. 同域单点操作会话：
+                1. php.ini设置：session.cookie_domain = .域名
+                2. php代码：ini_set("session.cookie_domain","域名");
+                3. setcookie(name, sid, now + expire, "/", .域名, 是否安全化)
+            2. 其它
+                无解决方法或效果不佳
+
+    方案：
+        1. 负载均衡转发cookie + 第三方数据库
+        2. ip_hash 相同ip用户请求转发到同一服务器
+        3. Tomcat集群：自带插件同步session。缺点：session复制消耗性能，同步时易造成内网流量瓶颈。

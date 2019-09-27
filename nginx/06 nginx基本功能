@@ -1,0 +1,21 @@
+nginx: engine X , http://nginx.org , c10k问题
+
+nginx的特性：
+    模块化设计、较好的扩展性
+    高可靠性
+        master/worker
+    支持热部署
+        不停机更新配置文件、更换日志、更新服务器程序版本
+    低内存消耗
+        1w个keep-alive(持久连接)模式下的非活动连接仅需要消耗2.5M内存
+    event-driven, aio, mmap
+
+基本功能：
+    静态资源的web服务器
+    http协议的反向代理服务器
+    pop3,smpt,imap4嗲个邮件协议的反向代理(国内难见使用)
+    能缓存打开的文件(元数据)、支持FastCGI(php-fpm)、uWSGI(python Web Framwork)等协议
+    模块化(非DSO机制)，过滤器zip，SSI，SSL
+
+web服务的相关功能：
+    虚拟主机(server)、keepalive、访问日志(支持基于日志缓冲提高其性能)、url rewrite、路径别名、基于IP及其用于的访问控制、支持速率限制及并发数限制...

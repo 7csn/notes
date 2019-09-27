@@ -1,0 +1,13 @@
+php > 5.3.10
+
+            1. 安装php及其相应辅助扩展
+                > yum update
+                > yum install php php-pear php-devel httpd gcc
+                php-pear   为了能够执行pecl安装包
+                php-devel  为了能够选择php-ice上的工具
+            2. 安装swoole
+                > pecl install swoole
+            3. 修改php.ini
+                增加扩展：extension=swoole.so
+            4. 查看php扩展
+                > php -m

@@ -1,0 +1,200 @@
+1. redis同memcache比较：
+    相同：都是高性能缓存技术
+    不同：
+        1. 存储类型：
+            mecache => string
+            redis => string/list/set/sort set/hash
+        2. 单key数据上限：
+            memcache => 1M
+            reids => 1G
+        3. 持久化(存储)
+            memcache 无持久化
+            redis   有持久化(保存数据至硬盘)
+        4. 支持度
+            memcache是老牌技术，对各种技术支持优于redis，可以存session，支持各种框架
+2. redis下载安装
+    > curl http://download.redis.io/releases/redis-4.0.8.tar.gz
+    > tar zxf redis-4.0.8.tar.gz
+    > mv redis-4.0.8 redis
+    > cd redis
+    # redis 没有configure，看readme.md文档[各种情况]
+    > make[ 32bit]  # 如果32位系统，则加32bit参数
+    > make PREFIX=/usr/local/redis install
+    > cd /usr/local/redis
+    # bin目录：
+        redis-server        服务端
+        redis-cli           客户端
+        reids-benchmark     性能测试工具
+        redis-check-aof     日志文件检测工具[检测日志并修复]
+        redis-check-dump    快照文件检测工具[效果同上]
+        # redis定期备份[日志]，少量导出为.rdb，大量导出为.aof，日志存放于redis根目录
+    # 启动[默认前台],默认端口6379
+    > bin/redis-server
+    # 再打开一个服务器端的ssh，连接[redis.conf默认限制仅本地连接]
+    > /usr/local/redis/bin/redis-cli [-h localhost -p 6379 -a 'password']
+3. 命令窗口操作
+    1. 通用操作
+        删除：
+            > delete k1 k2 ...  # 过滤不存在的k，返回删除k个数
+        修改键名：
+            > rename ok nk  # nk若存在将被覆盖
+            > renamenx ok nk  # nk存在则不修改，返回1或0
+        切换redis数据库(默认16个，0-15):
+            > select n
+        查询当前库相应键：
+            > keys preg     # preg正则支持*、?、[]符号
+        返回随机键：
+            > randomkey
+        获取类型：
+            > type k # 返回类型：string,list,set,order set,hash
+        判断是否有键：
+            > exists k # 返回1/0
+        查询生命周期：
+            > ttl k # 返回秒数，对不存在或过期k，返回-2，-1代表不自动失效，正整数
+        设置生命周期：
+            > expire k n  # 设置k生命周期为n秒
+        设置永久有效:
+            > persist k
+        清空当前库：
+            > flushdb
+        清空所有库：
+            > flushall
+        time    # 服务器时间，秒和微秒数
+        dbsize  # 当前库键的数量
+        BGREWAITEAOF    # 后台进程重写AOF
+        BGSAVE          # 后台保存rdb快照
+        SAVE            # 保存rdb快照
+        LASTSAVE        # 上次保存时间
+        showdown save|nosave
+            # 如果不小新flushall，立即shutdown nosave关闭服务器
+            # 然后手工编辑aof文件，去掉文件中的"flushall"字样，开启服务器，即可导入会原来数据
+            # 如果flushall之后，系统敲好bgrewriteaof，那么aof被清空，数据丢失
+        showlog         # 显示慢查询，slowlog-log-slower-than 10000 指定时间(ms)
+                        # slowlog-max-len 128 指定服务器储存的慢查询记录上限
+        info[ Replication|CPU|Memory..] # 查看redis服务器的信息
+
+    2. string 字符串
+        设置：
+            > set k v[ ex 秒|px 毫秒]
+        批设置：
+            > mset k1 v1 k2 v2 ...
+        获取：
+            > get k
+        批获取：
+            > mget k1 k2 ...
+        偏移修改：
+            > setrange k i change   # change替换v索引位，若i过大，则追加
+        偏移获取：
+            > getrange k start stop   # 索引起始(包含在内), stop(-n表示倒数第n个)
+        追加：
+            > append k v
+        设置并返回旧值：
+            > getset k v
+        自增1(64位无符号)：
+            > incr k    # k不存在则默认为0，再自增
+        自减1(64位无符号)：
+            > decr k    # k不存在则默认为0，再自减
+        自增整数(64位无符号)：
+            > incrby k n    # k不存在则默认为0，再自增
+        自减整数(64位无符号)：
+            > decrby k n    # k不存在则默认为0，再自减
+        自增小数：
+            > incrbyfloat k n
+        设置值得二进制指定位的符号，返回旧值：
+            > setbit k n
+        获取值的二进制指定位的符号：
+            > getbit k n
+        对k进行选择操作：
+            > bitop operation nk k1 k2 ...
+            # 将k1 k2 ... 进行operation操作，结果赋给nk
+            # operation(AND|OR|NOT|XOR),为NOT时,不能有多个k
+    3. list 链表
+        lpush k v1 v2 ...   # 插入头部
+        rpush k v1 v2 ...   # 尾部追加
+        lpop  k             # 返回并删除首元素
+        rpop  k             # 返回并删除尾元素
+        lrange k start stop # 返回范围
+        lrem k count v      # 删除|count|个v，正从左删，负从右删
+        ltrim k start stop  # 剪切链表
+        lindex k i          # 返回索引位的值
+        llen k              # 返回链表元素个数
+        linsert k before|after search v # 在首个search前/后插入v
+    4. set 集合
+        性质：唯一性，无序性，确定性
+        sadd k v1 v2 ...            # 集合增加元素
+        srem k v1 v2 ...            # 集合删除元素
+        spop k                      # 删除集合中随机一个元素并返回
+        srandmember k[ n]           # 返回集合中随机n个元素，n默认为1
+        smembers k                  # 返回集合中所有元素
+        scard k                     # 返回集合元素个数
+        sismember k v               # 判断元素是否属于集合，返回1/0
+        smove k1 k2 v               # 删除k1中的元素并添加到k2
+        sinter k1 k2 ...            # 返回交集
+        sinterstore k k1 k2 ...     # 交集赋给k
+        suinon k1 k2 ...            # 返回并集
+        sdiff k1 k2 ...             # 返回差集
+    5. order set 有序集合
+        zadd k s1 v1 s2 v2 ...      # 添加元素
+        zcard k                     # 返回元素个数
+        zcount k min max            # 返回区间内元素个数
+        zrank k v                   # 查询v的排名(分数升序，0名开始)
+        zrevrank k v                # 查询v的排名(分数降序，0名开始)
+        zrenge k start stop[ withscores]
+        # 集合排序后，返回名次start-stop的元素，参数为是否显示分数
+        zrevrange k start stop      # 降序后，取出名次范围
+        zrangebyscore k min max[ withscores] limit n m
+        # 升序后，取分数在min-max内，跳过n个，返回m个
+        zrem k v1 v2 ...            # 删除元素
+        zremrangebyscore k min max  # 删除分数在min-max的元素
+        zremrangebyrank k start end # 删除名次在start-end的元素
+        zinterstore k n k1 k2 ... kn[ weights n1 n2 ...][ aggregate sum|min|max]
+        # 求n个集合交集，赋给新集
+            n   集合个数
+            weights 使用权重 表示第几个集合的权[分数]
+            appregate   新分数的获取方式
+    6. hash 哈希
+        哈希可看做关联数组[值可以是string、list、关联数组]
+        hset k f v              # 设置键值对
+        hget k f                # 获取元素
+        hgetall a               # 获取所有键值
+        hmget k f1 f2           # 批量取值
+        hlen k                  # 获取元素个数
+        hkeys k                 # 获取所有键(field/域)
+        hvals k                 # 获取所有值
+        hexists k f             # 判断是否有键
+        hinrby k f v            # 将k:f的值增长整数v
+        hinrby float k f v      # 将k:f的值增长浮点v
+        hdel k f                # 删除键值
+    7. scan命令
+        keys * 取出所有key，需谨慎使用
+        scan 以游标方式获取key，上限10个，而非一次性取出，并提醒下次游标位置
+        scan n match key[preg] # 游标n处开始匹配
+4. php-redis扩展
+    参考memcache扩展
+5. 主从复制
+    主redis.conf:
+        不用特殊配置，通常关闭rdb
+    从redis.conf:
+        1. slaveof 主ip 主port
+        2. masterauth masterpassword    # 当主redis有密码时
+    注：
+        1. 同一台机器配置多个redis，slave要选取不同的port和pidfile文件
+        2. 主服务器可以配置密码(通常局域网内部配置密码):
+                require mm123456    # 这里以密码"mm123456"为例
+           从服务器中：
+                masterauth mm123456
+           客户端登录，须加参数 -a mm123456，否则，命令窗口操作需要加auth mm123456
+3. 配置文件修改
+    根目录下redis.conf文件
+    1. 后台运行
+        redis默认前台运行，修改为后台运行(守护进程):
+            daemonize no => daemonize yes
+        > /usr/local/redis/bin/redis-server /usr/local/redis/redis.conf
+    2. 数据库数量
+        databases 16    # 默认16
+    3. 数据库备份
+        save 900 1       # 900s有1个修改
+        save 300 100     # 300s有100个修改
+        save 60  10000   # 60s有10000个修改
+
+

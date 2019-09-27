@@ -1,0 +1,25 @@
+nginx:事件驱动IO边缘触发，且支持异步IO
+
+nginx的基本架构：
+    master/worker
+        一个master进程，可生成多个worker进程
+        事件驱动：epoll(Linux),kqueue(FreBSD),/dev/poll(Solarts)
+            消息通知：select,poll,rt signals
+        支持sendfile，sendfile64
+        支持AIO，mmap
+        master：加载配置文件、管理worker进程、平滑升级...
+        worker：http服务、http代理、fastcgi代理...
+
+模块模型：
+    核心模块：core module
+    标准模块：Standard HTTP modules
+    可选模块：Optional HTTP modules
+    邮件模块：Mail modules
+    第三方模块：3rd party modules
+
+作用：
+    静态资源的web服务器
+    http服务器反向代理
+        代理：客户端发送请求给代理，代理请求目标服务器，将返回信息处理后(或原样)返回给客户端
+        正向：客户端指定目标
+        反向：客户端不指定目标，由代理判断

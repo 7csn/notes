@@ -1,0 +1,48 @@
+测试nginx配置：
+> nginx -t
+平滑关闭/重载配置/重启日志：
+> nginx -s quit|reload|reopen
+强制关闭：
+> nginx -s stop
+
+配置文件：
+    主配置文件：nginx.conf
+        include conf.d/*.conf
+    mime.types
+    fastcgi配置文件：fastcgi_params
+                    uwsgi_params
+
+配置指令：
+    > Directive value1[ value2...];
+    全局指令：放置于文档根
+    模块指令：放置于响应模块文档
+    支持使用变量：
+        内置变量：由模块引入
+        自定义变量：
+            > set 变量名 变量值
+        引用变量：$变量名
+
+配置文件组织结构
+    main block
+    event {
+        ...
+    }
+    http {
+        ...
+    }
+    http配置段：
+        http{
+            ...
+            upstream{ #负载均衡容器
+                ...
+            }
+            server{ #每个server代表一个虚拟主机
+                ...
+                server_name #域名
+                root  #根目录
+                alias #别名
+                location url路径 { #可以有多个
+                    ...
+                }
+            }
+        }

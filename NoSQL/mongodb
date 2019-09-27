@@ -1,0 +1,141 @@
+mongodb：
+    文档数据库，存的是文档(Bson：json的二进制化)
+特点：
+    内部执行引擎为JS解释器，把文档存储成bson结构，在查询时，转换为JS对象，并可以通过js语法操作
+和传统数据库比较：
+    传统数据库：
+        结构化数据，每行的内容，符合表结构，列的个数、类型都一样
+    mongodb:
+        表下的每篇文档，可以有自己独特的结构(json对象都可以有自己独特的属性和值)
+安装：
+    https://www.mongodb.org
+    > wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-3.6.2.tgz # 用http快
+    > tar zxf mongodb-linux-x86_64-rhel70-3.6.2.tgz /usr/local/mongodb
+    # 如果报时间问题错误，更新系统时间
+启动：
+    > cd /usr/local/mongodb
+    > ls bin
+    #
+        bsondump        # 导出bson结构
+        mongo           # 客户端
+        mongod          # 服务端
+        mongodump       # 整体数据库导出
+        mongoexport     #
+        mongofiles
+        mongoimport
+        mongooplog
+        mongoperf
+        mongorestore    # 数据库整体导入
+        mongos          # 路由器(分片时用，分布式处理)
+        mongosniff
+        mongostat
+        mongotop
+    # 启动
+    # 如果root运行的mongod，客户端连接会提示错误信息，但是普通用户启动失败
+    > ./bin/mongod --dbpath=/data --logpath=/data/mongo17.log --fork
+        --dbpath        # 数据库存储目录
+        --logpath       # 日志存储文件
+        --port          # 运行端口(默认27017)
+        --fork          # 后台运行
+        --smallfiles    # 练习时使用，降低占用磁盘空间(刚启动占3-4G，降为400M)
+连接：
+    > /usr/local/mongodb/mongo
+mongodb入门命令：
+    show dbs                   # 显示数据库
+    use dbn                    # 使用指定数据库，dbn是库名；不存在也切换
+    show tables|collection     # 显示库下文档(集合：collection)
+    db.createCollection('cn')  # 创建collection，cn为名称，若库不存在，则连库一起创建
+    db.cn.insert(json)         # 隐式创建表，json为一条新数据
+    db.cn.drop()               # 删除collection，cn为名称
+    db.dropDatabase()          # 删除当前库
+mongodb增删改查：
+    形式：
+        db.cn.fn     # fn为操作类型方法
+    增：insert(json)
+        # 单条数据，形式：{}
+            可以指定id(例：{_id:2,age:20})，不指定生成默认对象id
+        # 多条数据，形式：[{},{},...]
+    删：remove(query, bool)
+        # 无参数或参数为{}，删全部数据
+        # query为查询表达式
+        # bool是否只删一行，默认false
+    改：update(query, json, option)
+        # 通常，将符合query的数据(_id保留)，替换成json
+        # json含有关键字时({key:json})：
+            $set            # 修改某列的值
+            $unset          # 删除某个列
+            $rename         # 重命名某个列
+            $inc            # 增长某个列
+            $setOnInsert    # 当upsert:true,插入操作补充字段
+        # option:{upsert:bool, multi:bool}
+            upsert          # 无匹配行，则执行插入操作，默认false
+            multi           # 是否匹配多行，默认false，只匹配1行
+    查：find|findOne(query, json);
+    参数说明：
+        1. query
+            1. 最简单的查询表达式
+                {f1:v1,...}
+                    # 查出符合列条件的数据，{}表示不限制列条件
+            2. $ne|$gt|$lt|$gte|$lte
+                f:{$ne|$gt|$lt|$gte|$lte:v}
+                    # f列 != > < >= <= 值v
+            3. $in|$nin|$all
+                f:{$in|$nin|$all:[v1,...]}
+                    # f列值 属于 不属于 数组包含 []
+            4. $exists
+                f:{$exists:v}
+                    # 含有f字段
+            5. $nor
+                $nor:[q1,...]
+                    # q1,...为条件组，所有条件都不符合
+            6. /正则/
+                f:/正则/
+            7. $where(不推荐)
+                $where:类sql语句
+                例：
+                    {$where: 'this.apple = 3 && this.pear != 5'}
+                        # this指遍历查询时的行数据
+        2. json
+            默认查出_id，添加_id:0可避免
+mongodb游标操作：
+    游标：
+        查询返回的资源或接口
+    基本操作：
+        var cursor = db.cn.find(query, json).skip(n).limit(m);  # 跳过n个取m个
+        cursor.hasNext()                # 判断游标是否取到尽头
+        cursor.next()                   # next取出一条数据，可以用printjson函数转成json打印
+        cursor.forEach(callback)        # 游标遍历，callback为回调函数
+mapReduce案例：中国地区一年地震热力图
+        获取地震数据csv文件：
+            数据下载地址：http://data.earthquake.cn/gcywfl/index.html
+            将地震数据文件处理后转成csv格式，上传为/data/dz.csv
+        导入csv文件：
+            > bin/mongoimport -d test -c dz --file=/data/dz.csv --type=csv --headerline
+            # 参数说明
+                -d              # 指定库名
+                -c              # 指定文档名
+                --file          # 源文件
+                --type          # 导入文件类型，默认json
+                --headerline    # 将第一条数据作为field
+        mongodb处理数据：
+            > /usr/local/mongodb/bin/mongo
+            use test;
+            var map = function() {
+                var jd = parseInt(this.jd / 5) * 5;
+                var wd = parseInt(this.wd / 5) * 5;
+                emit(jd + ':' + wd, 1);     // 将数据发送到reduce函数
+            }
+            var reduce = function(area, num) {
+                return Array.sum(num);
+            }
+            db.dz.mapReduce(map, reduce, {out:'res'});
+            var cursor = db.res.find();
+            while(cursor.hasNext()) {
+                var row = cursor.next();
+                var arr = row._id.split(':');
+                db.reli.insert({lat:arr[0],lng:arr[1],count:row.count});
+            }
+            exit;
+        导出json文件：
+            > bin/mongoexprot -d test -c reli --jsonArray -o /data/dz.json
+        copy百度热力图demo，将原数据数组改成dz.json内数组

@@ -1,0 +1,49 @@
+
+魔术方法在一定条件下会被自发调用。
+
+普通方法：
+
+1. __autoload(类名)
+    使用未定义的类时调用，抛出的异常不能被 catch 语句块捕获并导致致命错误
+
+
+类中函数：
+
+1. __set(属性名, 赋值)、__get(属性名)
+    修改、读取 未定义(包括 protected、private 修饰)对象属性时调用
+
+2. __isset(属性名)、__unset(属性名)
+    对未定义(包括 protected、private 修饰)对象属性进行 isset()、unset() 操作时调用
+
+3. __call(方法名, 参数列表数组)、__callStatic(方法名, 参数列表数组)
+    对未定义(包括 protected、private 修饰)非静态、静态方法进行操作时调用
+
+4. __construct、__destruct
+    构造函数，对象创建时调用
+    析构方法，对象从内存清除前调用，消除对象，将指向该对象所有变量该值，通常置 null 或用 unset
+
+5. __clone
+    对象被复制，即 clone(对象) 时调用，可以进行复制对象的某些初始化操作
+
+6. __toString
+    对象被当作字符串使用时调用，返回用于操作的字符串
+
+7. __sleep、__wakeup
+    对象被序列化，即 serialize(对象) 时调用，返回要参与序列化的属性名数组
+    对象反序列化，即 unserialize(对象序列化字符串) 时调用，可以进行某些初始化操作或重建工作(如丢失的数据库链接)
+
+8. __set_state(对象属性键值对数组)
+    var_export(对象) 时打印或返回一个字符串(类::__set_state(对象属性键值对数组print_r值))
+
+9. __invoke
+    对象当作函数使用时调用
+
+10. __debugInfo
+    对象被以复合数据打印(如 var_dump、print_r)时调用，返回数组作为打印结果
+
+
+注意：
+    1. public
+        通常都是 public，当拒绝某些方式调用时，可以设置非公开
+    2. static
+        __callStatic、__set_state 为静态，其他非静态

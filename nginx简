@@ -1,0 +1,79 @@
+目录介绍：
+    conf    配置文件
+    html    网页文件
+    logs    日志文件
+    sbin    主要二进制程序
+
+启动：
+    > nginx
+测试配置：
+    > nginx -t
+平滑关闭/强制关闭/重载配置/重启日志：
+    > nginx -s quit|stop|reload|reopen
+
+查看端口：
+    > netstat -antp|-lntp
+查看进程：
+    > ps aux|grep nginx
+
+80端口莫名占用：
+    server {
+        listen :80;
+        listen [::]:80;
+    }
+    改为：
+    server {
+       listen 80;
+       listen [::]:80 ipv6only=on;
+    }
+    或
+    server {
+       listen [::]:80;
+    }
+
+配置段：
+    # 工作进程，通常 CPU数*核数
+    worker_processes 1;
+    events {
+        # 每个worker进程最大允许连接数
+        worker_connections  1024;
+    }
+    # http服务器的主要配置段
+    http {
+        # 日志配置
+        log_format  test_log   '$remote_addr - $remote_user [$time_local] "$request" '
+                               '$status $body_bytes_sent "$http_referer" '
+                               '"$http_user_agent" "$http_x_forwarded_for"';
+        # 虚拟主机
+        server {
+            listen  80;
+            root    html;
+            server_name test.com www.test.com;
+            access_log  logs/test.log test_log
+            location / {
+                index  index.html;
+                # 伪静态
+                if (!-e $request_filename){
+                    rewrite ^/(.*)$ /index.php?$1 last;
+                }
+            }
+            # 图片反向代理
+            location ~ \.(jpg|jpeg|png|gif)$ {
+                # 转发客户端IP
+                proxy_set_header X-Forwarded-For $remote_addr;
+                # 设置反代目标
+                proxy_paas  http://imgserver;
+            }
+            # 负载均衡
+            upstream imgserver {
+                server 127.0.0.1:8080 weight=1 max_fails=2 fail_timeout=30s;
+                server 127.0.0.1:8081 weight=1 max_fails=2 fail_timeout=30s;
+            }
+            # php定位
+            location ~ \.php(.*)$ {
+                # 指定php-fpm(默认9000端口)程序处理php
+                fastcgi_pass   127.0.0.1:9000;
+                fastcgi_index  index.php;
+            }
+        }
+    }

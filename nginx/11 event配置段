@@ -1,0 +1,9 @@
+event配置段：
+    1. worker_connections #;
+        每个worker进程所能够响应的最大并发请求数量
+        work_process * worker_connections
+    2. use epoll|rgslg|select|poll;
+        定义使用的事件模型；建议让nginx自动选择
+    3. accept_mutex on|off;
+        各worker接收用户气球的负载均衡锁；启用时，表示用于让多个worker轮流地、序列化地响应新请求
+    4. lock_file /PATH/TO/LOCK_FILE;
