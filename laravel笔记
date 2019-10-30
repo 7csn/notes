@@ -1,0 +1,52 @@
+
+1. passport
+    1. 引入模块
+    > composer require laravel/passport
+
+    2. 生成相关表
+    > php artisan migrate
+
+    3. 密钥、密码授权客户端
+    > php artisan passport:keys                 # 生成密钥
+    > php artisan passport:client --password    # 密码授权客户端
+
+        备选：
+        > php artisan passport:install          # 生成密钥、个人访问客户端、密码授权客户端
+
+    4. 修改 auth 配置（以api为例）
+        guards.api.driver => passport       # 其他配置看需要
+
+    5. 相应模型修改
+        1. 添加 trait
+            use Laravel\Passport\HasApiTokens;
+        2. 重写用户名验证方法
+            public function findForPassport($username)
+            {
+                // 有时用户名不是 email，而是 name
+                return $this->where('name', $username)->first();
+            }
+
+    6. api 添加授权路由：
+        Route::post('oauth/token', ['uses' => '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken']);
+
+        备选（如需使用 passport 自带路由）：
+            AppServiceProvider 中 boot 方法添加路由配置：
+                Passport::routes();                                     // Passport 的路由
+                Passport::tokensExpireIn(now()->addDays(15));           // access_token 过期时间
+                Passport::refreshTokensExpireIn(now()->addDays(30));    // refreshTokens 过期时间
+
+    7. 获取 token
+        接口：api/oauth/token
+        POST参数：
+            grant_type: password
+            client_id:密码授权客户端ID
+            client_secret:密码授权客户端密码
+            username:用户名
+            scope:
+            password:密码
+
+2. 跨域访问
+    1. 引入模块
+    > composer require barryvdh/laravel-cors
+    2. api 中间件添加一行：
+        \Barryvdh\Cors\HandleCors::class,
