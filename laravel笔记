@@ -51,3 +51,13 @@
     > composer require barryvdh/laravel-cors
     2. api 中间件添加一行：
         \Barryvdh\Cors\HandleCors::class,
+
+
+3. 安装 Debugbar
+    1. 安装
+    > composer require "barryvdh/laravel-debugbar:~3.2" --dev
+    2. 生成配置文件，存放位置 config/debugbar.php：
+    > php artisan vendor:publish --provider="Barryvdh\Debugbar\ServiceProvider"
+    3. 配置config/debugbar.php：
+        'enabled' => env('APP_DEBUG', false),   // 调试器将以 .env 中的 APP_DEBUG 为准
+
