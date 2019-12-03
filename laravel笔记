@@ -61,3 +61,8 @@
     3. 配置config/debugbar.php：
         'enabled' => env('APP_DEBUG', false),   // 调试器将以 .env 中的 APP_DEBUG 为准
 
+4. 工具类（导航选中）
+    1. 安装
+    > composer require "hieu-le/active:~3.5"
+    2. 方法调用
+        active_class($bool, $trueClass = 'active', $falseClas = '');
