@@ -66,3 +66,39 @@
     > composer require "hieu-le/active:~3.5"
     2. 方法调用
         active_class($bool, $trueClass = 'active', $falseClas = '');
+
+5. 添加语言包
+    1. 安装
+    > composer require "overtrue/laravel-lang:~3.0"
+    2. 配置，config/app.php
+        1. 替换
+        Illuminate\Translation\TranslationServiceProvider::class, => Overtrue\LaravelLang\TranslationServiceProvider::class,
+        2. 修改
+        'locale' => 'zh-CN',
+
+6. 验证码包
+    1. 安装
+    > composer require "mews/captcha:~2.0"
+    2. 加载配置 config/captcha.php
+    > php artisan vendor:publish --provider='Mews\Captcha\CaptchaServiceProvider'
+    3. 使用
+        <img src="{{ captcha_src('名称') }}" onclick="this.src='/captcha/名称?'+Math.random()" />
+
+7. 图片裁剪包
+    1. 安装
+    > composer require intervention/image
+    2. 加载配置
+    > php artisan vendor:publish --provider="Intervention\Image\ImageServiceProviderLaravel5"
+    3. 使用
+        $image = \Image::make(图片物理路径);
+
+        // 进行大小调整的操作
+        $image->resize(宽度上线, null, function ($constraint) {
+            // 高度比例缩放
+            $constraint->aspectRatio();
+            // 防止裁图时图片尺寸变大
+            $constraint->upsize();
+        });
+
+        $image->save();
+
