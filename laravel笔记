@@ -102,3 +102,9 @@
 
         $image->save();
 
+8. 代码生成器
+    1. 安装
+    > composer require "summerblue/generator:~1.0" --dev # --dev 表明只在开发环境用
+    2. 使用
+    > php artisan make:scaffold 表名 --schema="字段名1:配置1:...配置x,...字段名n:配置1:...配置y"
+
