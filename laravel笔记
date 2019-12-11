@@ -108,3 +108,21 @@
     2. 使用
     > php artisan make:scaffold 表名 --schema="字段名1:配置1:...配置x,...字段名n:配置1:...配置y"
 
+9. 编辑器包
+    1. 下载：https://github.com/mycolorway/simditor/releases/download/v2.3.6/simditor-2.3.6.zip
+    2. 页面引入相关css、js
+    3. 创建编辑器对象：
+        var editor = new Simditor({
+            textarea: $对象,
+        });
+
+10. laravel-admin
+    1. 安装
+    > composer require encore/laravel-admin
+    2. 加载配置
+    > php artisan vendor:publish --provider="Encore\Admin\AdminServiceProvider"
+    3. 登录：
+        网址：域名/admin
+        账号：admin
+        密码：admin
+    4. 文档：https://laravel-admin.org/docs/zh/installation
