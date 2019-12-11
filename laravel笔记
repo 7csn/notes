@@ -115,6 +115,7 @@
         var editor = new Simditor({
             textarea: $对象,
         });
+    4. 文档：https://simditor.tower.im/docs/doc-usage.html
 
 10. laravel-admin
     1. 安装
