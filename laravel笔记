@@ -127,3 +127,11 @@
         账号：admin
         密码：admin
     4. 文档：https://laravel-admin.org/docs/zh/installation
+
+11. HTMLPurifier
+    1. 安装
+    > composer require "mews/purifier:~2.0"
+    2. 加载配置
+    > php artisan vendor:publish --provider="Mews\Purifier\PurifierServiceProvider"
+
+
