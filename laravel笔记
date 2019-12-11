@@ -134,4 +134,8 @@
     2. 加载配置
     > php artisan vendor:publish --provider="Mews\Purifier\PurifierServiceProvider"
 
+12. 安装依赖 Guzzle
+    > composer require "guzzlehttp/guzzle:~6.3"
 
+13. 安装依赖 PinYin
+    > composer require "overtrue/pinyin:~3.0"
