@@ -167,3 +167,13 @@
     3. 发布资源文件
     > php artisan vendor:publish --provider="VIACreative\SudoSu\ServiceProvider"
     4. 配置：生效域名、用户模型
+18. Laravel Administrator
+    1. 安装
+    > composer require "summerblue/administrator:~1.1"
+    2. 发布资源文件
+    > php artisan vendor:publish --provider="Frozennode\Administrator\AdministratorServiceProvider"
+
+
+
+
+
