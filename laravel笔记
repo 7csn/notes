@@ -150,5 +150,20 @@
     > php artisan vendor:publish --provider="Laravel\Horizon\HorizonServiceProvider"
     3. 网址：域名/horizon
 
+16. 权限
+    > composer require "spatie/laravel-permission:~2.29"
+    > php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="migrations"
+    > php art migrate
+    > php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="config"
 
-
+17. 用户切换工具 sudo-su
+    1. 安装
+    > composer require "viacreative/sudo-su:~1.1"
+    2. 添加 Provider
+        app\Providers\AppServiceProvider@register:
+            if (app()->isLocal()) {
+                $this->app->register(\VIACreative\SudoSu\ServiceProvider::class);
+            }
+    3. 发布资源文件
+    > php artisan vendor:publish --provider="VIACreative\SudoSu\ServiceProvider"
+    4. 配置：生效域名、用户模型
