@@ -230,3 +230,43 @@
             $message = $exception->getException('yunpian')->getMessage();
             dd($message);
         }
+
+19. 数据库迁移字段修改补丁($table->change())
+    > composer require doctrine/dbal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
