@@ -173,7 +173,12 @@
     2. 发布资源文件
     > php artisan vendor:publish --provider="Frozennode\Administrator\AdministratorServiceProvider"
 
-
+19. DingoApi
+    1. 安装
+    > composer require dingo/api:2.0.0-beta1
+    2. 配置列表
+    > php artisan vendor:publish
+        填入 Dingo\Api\Provider\LaravelServiceProvider 所在序号，回车
 
 
 
