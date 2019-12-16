@@ -180,5 +180,53 @@
     > php artisan vendor:publish
         填入 Dingo\Api\Provider\LaravelServiceProvider 所在序号，回车
 
+20. easy-sms
+    1. 安装
+    > composer require "overtrue/easy-sms"
+    2. 创建配置文件
+    > touch config/easysms.php
+        <?php
+        return [
+            // HTTP 请求的超时时间（秒）
+            'timeout' => 5.0,
 
+            // 默认发送配置
+            'default' => [
+                // 网关调用策略，默认：顺序调用
+                'strategy' => \Overtrue\EasySms\Strategies\OrderStrategy::class,
 
+                // 默认可用的发送网关
+                'gateways' => [
+                    'yunpian',
+                ],
+            ],
+            // 可用的网关配置
+            'gateways' => [
+                'errorlog' => [
+                    'file' => '/tmp/easy-sms.log',
+                ],
+                'yunpian' => [
+                    'api_key' => env('YUNPIAN_API_KEY'),
+                ],
+            ],
+        ];
+
+    3. 创建服务提供者文件
+    > php artisan make:provider EasySmsServiceProvider
+        -> register()
+            $this->app->singleton(\Overtrue\EasySms\EasySms::class, function ($app) {
+                return new EasySms(config('easysms'));
+            });
+            $this->app->alias(\Overtrue\EasySms\EasySms::class, 'easysms');
+    4. config/app.php 配置 providers 列表添加一行：
+        App\Providers\EasySmsServiceProvider::class,
+    5. 事例
+        $sms = app('easysms');
+        try {
+            $sms->send(13212345678, [
+                'content'  => '【Lbbs社区】您的验证码是1234。如非本人操作，请忽略本短信',
+            ]);
+        } catch (\Overtrue\EasySms\Exceptions\NoGatewayAvailableException $exception) {
+            $message = $exception->getException('yunpian')->getMessage();
+            dd($message);
+        }
