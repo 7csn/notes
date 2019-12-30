@@ -1,0 +1,272 @@
+
+1. passport
+    1. 引入模块
+    > composer require laravel/passport
+
+    2. 生成相关表
+    > php artisan migrate
+
+    3. 密钥、密码授权客户端
+    > php artisan passport:keys                 # 生成密钥
+    > php artisan passport:client --password    # 密码授权客户端
+
+        备选：
+        > php artisan passport:install          # 生成密钥、个人访问客户端、密码授权客户端
+
+    4. 修改 auth 配置（以api为例）
+        defaults.guard => api           # 默认 api 端
+        guards.api.driver => passport   # 设置 api 驱动
+
+    5. 相应模型修改
+        1. 添加 trait
+            use Laravel\Passport\HasApiTokens;
+        2. 重写用户名验证方法
+            public function findForPassport($username)
+            {
+                // 有时用户名不是 email，而是 name
+                return $this->where('name', $username)->first();
+            }
+
+    6. api 添加授权路由：
+        Route::post('oauth/token', ['uses' => '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken']);
+
+        备选（如需使用 passport 自带路由）：
+            AppServiceProvider 中 boot 方法添加路由配置：
+                Passport::routes();                                     // Passport 的路由
+                Passport::tokensExpireIn(now()->addDays(15));           // access_token 过期时间
+                Passport::refreshTokensExpireIn(now()->addDays(30));    // refreshTokens 过期时间
+
+    7. 获取 token
+        接口：api/oauth/token
+        POST参数：
+            grant_type: password
+            client_id:密码授权客户端ID
+            client_secret:密码授权客户端密码
+            username:用户名
+            scope:
+            password:密码
+
+2. 跨域访问
+    1. 引入模块
+    > composer require barryvdh/laravel-cors
+    2. api 中间件添加一行：
+        \Barryvdh\Cors\HandleCors::class,
+
+
+3. 安装 Debugbar
+    1. 安装
+    > composer require "barryvdh/laravel-debugbar:~3.2" --dev
+    2. 生成配置文件，存放位置 config/debugbar.php：
+    > php artisan vendor:publish --provider="Barryvdh\Debugbar\ServiceProvider"
+    3. 配置config/debugbar.php：
+        'enabled' => env('APP_DEBUG', false),   // 调试器将以 .env 中的 APP_DEBUG 为准
+
+4. 工具类（导航选中）
+    1. 安装
+    > composer require "hieu-le/active:~3.5"
+    2. 方法调用
+        active_class($bool, $trueClass = 'active', $falseClas = '');
+
+5. 添加语言包
+    1. 安装
+    > composer require "overtrue/laravel-lang:~3.0"
+    2. 配置，config/app.php
+        1. 替换
+        Illuminate\Translation\TranslationServiceProvider::class, => Overtrue\LaravelLang\TranslationServiceProvider::class,
+        2. 修改
+        'locale' => 'zh-CN',
+
+6. 验证码包
+    1. 安装
+    > composer require "mews/captcha:~2.0"
+    2. 加载配置 config/captcha.php
+    > php artisan vendor:publish --provider='Mews\Captcha\CaptchaServiceProvider'
+    3. 使用
+        <img src="{{ captcha_src('名称') }}" onclick="this.src='/captcha/名称?'+Math.random()" />
+
+7. 图片裁剪包
+    1. 安装
+    > composer require intervention/image
+    2. 加载配置
+    > php artisan vendor:publish --provider="Intervention\Image\ImageServiceProviderLaravel5"
+    3. 使用
+        $image = \Image::make(图片物理路径);
+
+        // 进行大小调整的操作
+        $image->resize(宽度上线, null, function ($constraint) {
+            // 高度比例缩放
+            $constraint->aspectRatio();
+            // 防止裁图时图片尺寸变大
+            $constraint->upsize();
+        });
+
+        $image->save();
+
+8. 代码生成器
+    1. 安装
+    > composer require "summerblue/generator:~1.0" --dev # --dev 表明只在开发环境用
+    2. 使用
+    > php artisan make:scaffold 表名 --schema="字段名1:配置1:...配置x,...字段名n:配置1:...配置y"
+
+9. 编辑器包
+    1. 下载：https://github.com/mycolorway/simditor/releases/download/v2.3.6/simditor-2.3.6.zip
+    2. 页面引入相关css、js
+    3. 创建编辑器对象：
+        var editor = new Simditor({
+            textarea: $对象,
+        });
+    4. 文档：https://simditor.tower.im/docs/doc-usage.html
+
+10. laravel-admin
+    1. 安装
+    > composer require encore/laravel-admin
+    2. 加载配置
+    > php artisan vendor:publish --provider="Encore\Admin\AdminServiceProvider"
+    3. 登录：
+        网址：域名/admin
+        账号：admin
+        密码：admin
+    4. 文档：https://laravel-admin.org/docs/zh/installation
+
+11. HTMLPurifier
+    1. 安装
+    > composer require "mews/purifier:~2.0"
+    2. 加载配置
+    > php artisan vendor:publish --provider="Mews\Purifier\PurifierServiceProvider"
+
+12. 安装依赖 Guzzle
+    > composer require "guzzlehttp/guzzle:~6.3"
+
+13. 安装依赖 PinYin
+    > composer require "overtrue/pinyin:~3.0"
+
+14. 安装 redis 驱动
+    > composer require "predis/predis:~1.1"
+
+15. 队列监控 Horizon
+    1. 安装
+    > composer require "laravel/horizon:~1.3"
+    2. 加载配置
+    > php artisan vendor:publish --provider="Laravel\Horizon\HorizonServiceProvider"
+    3. 网址：域名/horizon
+
+16. 权限
+    > composer require "spatie/laravel-permission:~2.29"
+    > php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="migrations"
+    > php art migrate
+    > php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="config"
+
+17. 用户切换工具 sudo-su
+    1. 安装
+    > composer require "viacreative/sudo-su:~1.1"
+    2. 添加 Provider
+        app\Providers\AppServiceProvider@register:
+            if (app()->isLocal()) {
+                $this->app->register(\VIACreative\SudoSu\ServiceProvider::class);
+            }
+    3. 发布资源文件
+    > php artisan vendor:publish --provider="VIACreative\SudoSu\ServiceProvider"
+    4. 配置：生效域名、用户模型
+18. Laravel Administrator
+    1. 安装
+    > composer require "summerblue/administrator:~1.1"
+    2. 发布资源文件
+    > php artisan vendor:publish --provider="Frozennode\Administrator\AdministratorServiceProvider"
+
+19. DingoApi
+    1. 安装
+    > composer require dingo/api:2.0.0-beta1
+    2. 配置列表
+    > php artisan vendor:publish
+        填入 Dingo\Api\Provider\LaravelServiceProvider 所在序号，回车
+
+20. easy-sms
+    1. 安装
+    > composer require "overtrue/easy-sms"
+    2. 创建配置文件
+    > touch config/easysms.php
+        <?php
+        return [
+            // HTTP 请求的超时时间（秒）
+            'timeout' => 5.0,
+
+            // 默认发送配置
+            'default' => [
+                // 网关调用策略，默认：顺序调用
+                'strategy' => \Overtrue\EasySms\Strategies\OrderStrategy::class,
+
+                // 默认可用的发送网关
+                'gateways' => [
+                    'yunpian',
+                ],
+            ],
+            // 可用的网关配置
+            'gateways' => [
+                'errorlog' => [
+                    'file' => '/tmp/easy-sms.log',
+                ],
+                'yunpian' => [
+                    'api_key' => env('YUNPIAN_API_KEY'),
+                ],
+            ],
+        ];
+
+    3. 创建服务提供者文件
+    > php artisan make:provider EasySmsServiceProvider
+        -> register()
+            $this->app->singleton(\Overtrue\EasySms\EasySms::class, function ($app) {
+                return new EasySms(config('easysms'));
+            });
+            $this->app->alias(\Overtrue\EasySms\EasySms::class, 'easysms');
+    4. config/app.php 配置 providers 列表添加一行：
+        App\Providers\EasySmsServiceProvider::class,
+    5. 事例
+        $sms = app('easysms');
+        try {
+            $sms->send(13212345678, [
+                'content'  => '【Lbbs社区】您的验证码是1234。如非本人操作，请忽略本短信',
+            ]);
+        } catch (\Overtrue\EasySms\Exceptions\NoGatewayAvailableException $exception) {
+            $message = $exception->getException('yunpian')->getMessage();
+            dd($message);
+        }
+
+19. 数据库迁移字段修改补丁($table->change())
+    > composer require doctrine/dbal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
