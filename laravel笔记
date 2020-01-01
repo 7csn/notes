@@ -231,11 +231,14 @@
             dd($message);
         }
 
-19. 数据库迁移字段修改补丁($table->change())
+21. 数据库迁移字段修改补丁($table->change())
     > composer require doctrine/dbal
 
-
-
+22. UI
+    1. 安装
+    > composer require laravel/ui --dev
+    2. 引入 bootstrap
+    > php artisan ui bootstrap
 
 
 
