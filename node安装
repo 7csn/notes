@@ -3,3 +3,7 @@ xz -d node-v8.9.3-linux-x64.tar.xz
 tar -xf node-v8.9.3-linux-x64.tar.xz node
 ln -s node/bin/node /usr/local/bin/node
 ln -s node/bin/npm /usr/local/bin/npm
+
+# npm yarn ??
+> npm config set registry=https://registry.npm.taobao.org
+> yarn config set registry 'https://registry.npm.taobao.org'
