@@ -1,3 +1,24 @@
+解决 Windows 系统使用 Homestead 运行 Laravel 本地项目响应缓慢问题
+1. 安装 NFS Plugin
+> vagrant plugin install vagrant-winnfsd
+2. 修改配置
+    1. homestead/scripts/homestead.rb
+        # Register All Of The Configured Shared Folders
+        if settings.include? 'folders'
+          settings["folders"].sort! { |a,b| a["map"].length <=> b["map"].length }
+
+          settings["folders"].each do |folder|
+            config.vm.synced_folder folder["map"], folder["to"],
+            id: folder["map"],
+            :nfs => true,
+            :mount_options => ['nolock,vers=3,udp,noatime']
+          end
+        end
+    2. Homestead.yaml
+        folders:
+            - map: ~/Code
+              to: /home/vagrant/Code
+              type: nfs
 
 1. passport
     1. 引入模块
