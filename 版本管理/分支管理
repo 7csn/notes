@@ -1,0 +1,24 @@
+
+分支主要类型
+    master      主分支
+    dev         开发分支
+    feature     功能分支类
+    release     测试分支类
+    hotfix      线上 BUG 修复分支类
+
+开发流程，假设开发功能 x，以某程序员 cx 为例：
+    01. 准备开发                 [程序组长]    从 dev 拉取 feature-x
+    02. 开发                     [程序员]      从 feature-x 拉取到 cx，在 cx 上开发
+    03. 部分开发完成             [程序组长]    将 cx 合并到 feature-x
+    04. 全部开发完成             [程序主管]    将 feature-x 合并到 dev
+    05. 准备测试                 [程序组长]    从 dev 拉取 release-x
+    06. 测试                     [测试员]      在 release-x 测试
+    07. 修复 BUG                 [程序员]      从 release-x 拉取到 cx，在 cx 修复 BUG
+    08. 部分 BUG 修复完成        [程序组长]    将 cx 合并到 release-x
+    09. 全部 BUG 修复完成，测试  [测试员]      在 release-x 测试
+    10. 上线                     [程序主管]    将 release-x 合并到 dev 和 master，在 master 打标签
+    11. 线上 BUG 修复准备        [程序组长]    从 master 拉取 hotfix-x
+    12. 修复线上 BUG             [程序员]      从 hotfix-x 拉取到 cx，在 cx 修复 BUG
+    13. 部分修复完成             [程序组长]    将 cx 合并到 hotfix-x
+    14. 全部修复完成             [程序主管]    将 hotfix-x 合并到 dev 和 master，在 master 打标签
+
