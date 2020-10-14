@@ -5,6 +5,8 @@ git安装：
     linux：
         > yum -y install git
 使用前设置用户邮箱：
+    > git config --global user.name 'shen-da'
+    > git config --global user.email '747472991@qq.com'
     > git config --global user.name '7csn'
     > git config --global user.email '1479672753@qq.com'
 设置编码：
@@ -154,18 +156,76 @@ git安装：
                 denyCurrentBranch = false
         # 接收推送后，查看仓库工作区变化，须执行一次：
             > git reset --hard
-github等仓库SSH Key：
+github等仓库SSH Key（https://www.cnblogs.com/fly_dragon/p/8718614.html）：
     1. 查看用户主目录是否有.ssh目录，其中是否有id_rsa和id_rsa.pub文件
         若无：
             > ssh-keygen -t rsa -C "本人邮件"   # 一路回车
     2. 将id_rsa.pub内的公钥添加到各开源仓库开放设置中。
         如果是自定义远程：
             1. 创建git用户
-            2. 将所有程序员公钥导入git用户根目录下.ssh/authorized_keys，一行一个
+            2. 将所有程序员公钥导入git用户根目录下.ssh（700权限）/authorized_keys（600权限），一行一个；此时程序员客户端可以`ssh git@远程IP`连接远程服务器
             3. 创建git仓库，修改用户组为git
             4. 禁用shell登录:
-                将/etc/passwd文件中git用户对应的执行解释器由/bin/bash改为/usr/bin/git-shell
+                1. mkdir /home/git/git-shell-commands
+                2. 将/etc/passwd文件中git用户对应的执行解释器由/bin/bash改为/usr/bin/git-shell
                 如此，git用户可正常通过ssh使用git，但无法登录shell
+        gitolite 管理：
+            1. 添加gitolite依赖的perl的包：`sudo yum install 'perl(Data::Dumper)'`
+            2. 清空 .ssh/authorized_keys，本地上传管理者公钥`scp ~/.ssh/id_rsa.pub git@服务器IP:~/.ssh/管理者.pub`
+            3. 安装配置gitolite
+                # git 用户家目录下载gitolite
+                > su - git && cd ~
+                > git clone https://github.com/sitaramc/gitolite
+                # 安装
+                > mkdir bin
+                > ./gitolite/install -to $HOME/bin
+                # 将管理者公钥设置到gitolite
+                > ./bin/gitolite setup -pk ./.ssh/管理者.pub
+                # 安装完毕，所有项目在 ./repositories 目录中，以 .git 结尾，默认管理和测试仓库：gitolite-admin 和 testing
+            4. 管理员本地下载 gitolite 管理
+                > git clone git@远程IP:gitolite-admin
+                > ll gitolite-admin
+                # conf 配置目录，含 gitolite.conf（配置权限文件）
+                # keydir 成员公钥文件夹，已有 管理者.pub
+            5. 添加成员公钥文件，放于 gitolite-admin/keydir 目录
+            6. 配置权限：gitolite.conf
+                案例：
+                    # 组 = 成员：成员可以是组和单人混合，前置@表组
+                    @admin = 7csn   # admin组，成员：7csn
+                    @om = 7csn chen # om组，成员：7csn、chen
+                    @qa = shen
+
+                    # 默认的管理仓库
+                    repo gitolite-admin
+                        RW+     =   7csn    # R 读权限，W 写权限，+ 强制更新分支、删除分支、更新标签权限
+
+                    # 默认的测试仓库
+                    repo testing
+                        RW+     =   @all    # @all 表示全员组
+
+                    # 自定义仓库
+                    repo om
+                        RW+     =   @admin
+                        RW+ master = @admin # master 分支
+                        RW+ dev  =   @om    # dev 分支
+                        R refs/tags/ = @qa  # qa组对 refs/tags/ 开头文件具只读权限
+
+                注意：管理者对 gitolite-admin 修改应以 git 方式进行
+本地多个ssh的key处理：
+    > mkdir ~/.ssh/config
+        Host 自定义主机名1
+        HostName  远程IP1
+        User git
+        identityFile 使用的本地公钥路径1
+
+        Host 自定义主机名2
+        HostName  远程IP2
+        User git
+        identityFile 使用的本地公钥路径2
+
+    > cd 仓库源目录
+    > git clone git@主机名:仓库路径
+
 自定义git：
     > git config --global color.ui true     # 配置颜色
 忽略特殊文件：
@@ -198,3 +258,5 @@ github等仓库SSH Key：
         [user]
             name = 7csn
             email = 1479672753@qq.com
+
+git中文开发手册：https://www.php.cn/manual/view/34943.html
