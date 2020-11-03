@@ -17,6 +17,7 @@ git安装：
     $ git config --global i18n.logoutputencoding utf-8  # 输出 log 编码
     $ export LESSCHARSET=utf-8
     # 最后一条命令是因为 git log 默认使用 less 分页，所以需要 bash 对 less 命令进行 utf-8 编码
+
 基本操作(项目根目录)：
     git仓库初始化：
         > git init
@@ -45,6 +46,7 @@ git安装：
         > git rm readme.txt
         > git commit -m '删除readme.txt'
     注：git管理过程中，存在于暂存区或版本仓库的文件，不要直接删改，最好通过git命令
+
 分支管理：
     查看分支：
         > git branch
@@ -54,6 +56,8 @@ git安装：
         > git checkout dev
     创建并切换分支：
         > git checkout -b dev
+    推送分支到远程服务器：
+        > git push 远程名 本地分支名:远程分支名
     删除分支：
         > git branch -d dev
     合并dev分支到当前：
@@ -89,6 +93,7 @@ git安装：
         4. feature
             功能分支，每添加一个新功能，创建一个feature分支，完成后合并删除。
             过程同bug，只是在dev分支基础上。
+
 查看日志：
     查看项目日志：
         > git log
@@ -98,6 +103,7 @@ git安装：
         > git log --pretty=oneline
     分支合并日志：
         > git log --graph --pretty=oneline --abbrev-commit
+
 版本相关：
     查看版本：
         > git reflog
@@ -110,6 +116,7 @@ git安装：
         > git reset --hard HEAD^^
         > git reset --hard HEAD~3
         > git reset --hard 7011  # 至少四位唯一日志串
+
 标签管理：
     创建标签：
         > git checkout master
@@ -124,10 +131,12 @@ git安装：
         > git push 远程名 v1.0                  # 推送指定标签到远程
         > git push 远程名 --tags                # 推送所有标签到远程
         > git push 远程名 :refs/tags/v0.9       # 从远程删除指定标签
+
 非空项目变成仓库：
     > git init
     > git add -A
     > git commit -m 'init'
+
 远程相关操作：
     设置远程仓库(默认master分支)：
         1. 仓库中
@@ -156,6 +165,7 @@ git安装：
                 denyCurrentBranch = false
         # 接收推送后，查看仓库工作区变化，须执行一次：
             > git reset --hard
+
 github等仓库SSH Key（https://www.cnblogs.com/fly_dragon/p/8718614.html）：
     1. 查看用户主目录是否有.ssh目录，其中是否有id_rsa和id_rsa.pub文件
         若无：
@@ -211,6 +221,7 @@ github等仓库SSH Key（https://www.cnblogs.com/fly_dragon/p/8718614.html）：
                         R refs/tags/ = @qa  # qa组对 refs/tags/ 开头文件具只读权限
 
                 注意：管理者对 gitolite-admin 修改应以 git 方式进行
+
 本地多个ssh的key处理：
     > mkdir ~/.ssh/config
         Host 自定义主机名1
@@ -228,6 +239,7 @@ github等仓库SSH Key（https://www.cnblogs.com/fly_dragon/p/8718614.html）：
 
 自定义git：
     > git config --global color.ui true     # 配置颜色
+
 忽略特殊文件：
     忽略原则：
         1. 操作系统自动生成的文件，如缩略图
@@ -244,6 +256,7 @@ github等仓库SSH Key（https://www.cnblogs.com/fly_dragon/p/8718614.html）：
         > git add -f 忽略文件或目录
     检查.gitignore忽略文件或目录：
         > git check-ignore -v 测试文件或目录   # 测试存在情况
+
 配置命令别名：
     > git config --global alias.别名 原名   # 原名可为'命令字符串'
     配置git时，--global针对当前用户，不加则只针对当前仓库
