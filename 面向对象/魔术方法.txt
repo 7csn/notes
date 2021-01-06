@@ -34,12 +34,17 @@
 
 8. __set_state(对象属性键值对数组)
     var_export(对象) 时打印或返回一个字符串(类::__set_state(对象属性键值对数组print_r值))
+    # 测试未果，完全无用
 
 9. __invoke
     对象当作函数使用时调用
 
 10. __debugInfo
     对象被以复合数据打印(如 var_dump、print_r)时调用，返回数组作为打印结果
+
+11. @since 7.4 __serialize、__unserialize；会屏蔽 __sleep、__wakeup
+    对象被序列化，即 serialize(对象) 时调用，返回要参与序列化的数组
+    对象反序列化，即 unserialize(对象序列化字符串) 时调用，可以进行某些初始化操作或重建工作(如丢失的数据库链接)
 
 
 注意：
