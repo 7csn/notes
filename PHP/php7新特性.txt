@@ -1,0 +1,105 @@
+7.0
+
+01. 组合比较符 <=> 
+02. null 合并运算符 ??
+03. 函数参数标量类型声明（禁标量关键字同名类）
+04. 函数返回值类型声明
+05. 匿名类 new class{}
+06. Unicode codepoint 转译语法（"\u{十六进制}" 或 <<<EOF \u{十六进制} EOF）
+07. Closure::call 临时绑定方法到对象并调用（$foo->call($obj)）
+08. 带过滤的 unserialize（更安全的方式解包数据）
+09. IntlChar 类（操作多字符集）
+10. 预期
+11. use 批量导入
+12. 生成器支持返回表达式
+13. 生成器委派（给其它生成器 yield from foo()）
+14. 整除法函数
+15. session_start 会话选项设置
+16. preg_replace_callback_array（批量正则回调替换）
+17. 随机字符串和随机整数函数 random_bytes 和 random_int
+18. define 支持定义数组常量
+
+变更：
+1. 错误报告转为抛出 Error
+2. list 逆序变顺序
+3. foreach 不再改变内部数组指针
+4. 十六进制字符串不再被当作数字
+5. $HTTP_RAW_POST_DATA 废弃由 php://input 代替
+6. 移除了 ASP 和 script PHP 标签
+
+---------------------------------------------------
+
+7.1
+
+1. 函数参数和返回值 nullable 类型声明
+2. 函数返回值 void 类型声明
+3. 类常量访问修饰符
+4. 函数参数和返回值 iterable 类型（数组或实现了 Traversable 接口的对象）
+5. 多异常捕获
+6. list 支持键名
+7. 字符串支持负向（如：$str[-1]）
+8. Closure::fromCallable 将 callable 转闭包
+9. http2 服务推送支持（已加入 CURL  扩展）
+
+变更：
+1. 传参过少由 warning 转为 抛出 Error
+2. 移除了 ext/mcrypt 扩展
+
+---------------------------------------------------
+
+7.2 
+
+1. 函数参数返回值类型 object
+2. 可重写抽象方法
+3. 通过名称加载扩展
+4. 使用Argon2算法生成密码散列
+5. use 批量导入支持尾部逗号换行
+
+变更：
+1. number_format 不再返回 -0 值
+2. get_class() 不再允许 null 参数，否则报 warning 错误
+3. count() 作用于非 Countable 类型报 warning 错误
+4. 不带引号的非常量字符串，以前视为字符串本身；现在报 warning 错误
+5. __autoload 方法废弃
+6. each 废弃
+7. is_object、gettype 修正
+8. 数组转对象，可访问整型键的值
+
+---------------------------------------------------
+
+7.3 
+
+01. 更灵活的 Heredoc 和 Nowdoc 语法
+02. 数组析构支持引用赋值
+03. list 支持引用解析
+04. instanceof 支持字面量语法
+05. 支持函数调用时参数后跟逗号
+06. bcscale() 支持获取当前使用的 scale
+07. LDAP（轻量目录访问协议）完全支持
+08. 多字节字符串函数更新
+09. FastCGI 进程管理
+10. Argon2id 算法支持
+11. CompileError 异常替代了一些编译错误
+12. 性能提升
+13. 废弃大小写不敏感的常量
+14. 废弃在字符串中搜索非字符串内容（不再转为 ASCII 值）
+15. 新常量
+
+---------------------------------------------------
+
+7.4 
+
+1. 预加载（服务启动，未运行程序代码前，将一组 PHP 文件甚至框架加载到内存，以提升性能）
+    修改 php.ini
+        [opcache]
+        zend_extension=opcache.so
+        opcache.enable=1
+        opcache.enable_cli=1
+        opcache.preload=预加载 php 文件（该文件可 opcache_compile_file 加载其它文件，需加载依赖文件；也可用 require_once）
+2. FFI
+3. 类属性的类型申明
+4. null 合并赋值运算符 ??=
+5. 弃用 WDDX 扩展
+6. 简化匿名函数
+7. 新增 mb_str_split 函数
+8. 核心扩展 Hash（不可禁用）

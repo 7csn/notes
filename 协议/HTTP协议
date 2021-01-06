@@ -185,16 +185,23 @@ Content-length: 15
 
 usr=123&pwd=abc
 
-POST /test HTTP/1.1
+POST / HTTP/1.1
 Host: chaser.com
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Accept-Encoding: gzip, deflate
-Accept-Language: zh-CN,zh;q=0.9
-Cache-Control: max-age=0
-Connection: keep-alive
-Upgrade-Insecure-Requests: 1
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.106 Safari/537.36
-Content-type: application/x-www-form-urlencoded
 Content-length: 15
 
 usr=123&pwd=abc
+
+
+GET / HTTP/1.1
+Host: chaser.com
+
+
+GET /?a=get HTTP/1.1
+Host: weibo.test
+Cookie: a=cookie
+
+
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 6
+
+a=post

@@ -1,0 +1,92 @@
+
+跨域：
+    一个域下的文档或脚本试图取请求另一个域下的资源。
+    1. 广义：
+        资源跳转：超链接、重定向、表单提交
+        资源嵌入：html、css 的文件外链
+        脚本请求：js 发起的 ajax 请求、dom 和 js 对象的跨域操作等
+    2. 狭义：
+        由浏览器同源策略限制的一类请求场景
+
+同源策略 SOP（Same origin policy）
+    “协议+域名+端口”三者相同，否则限制以下行为：
+        1. Cookie、LocalStorage 和 IndexDB 无法读取
+        2. DOM 和 JS 对象无法获得
+        3. AJAX 请求不能发送
+    1995年被 Netscape（网景）公司引入到浏览器，成为浏览器最核心也最基本的安全功能。
+
+跨域解决方案
+1、 通过jsonp跨域
+2、 document.domain + iframe跨域
+3、 location.hash + iframe
+4、 window.name + iframe跨域
+5、 postMessage跨域
+6、 跨域资源共享（CORS）
+7、 nginx代理跨域
+8、 nodejs中间件代理跨域
+9、 WebSocket协议跨域
+
+常见跨域解决方案说明：
+    1. 通过 jsonp 跨域：
+        添加 <script src="跨域地址?[其它参数&]callback=回调函数名">
+    2. 主域名相同，document.domain + iframe：
+        父子页面 JS 设置 document.domain 为基础域名
+        例：
+            父页面：http://www.test.com/a.html
+                <iframe id="iframe" src="http://b.test.com/b.html"></frame>
+                <script>
+	    document.domain='test.com';
+	    var user = 'test';
+                </script>
+            子页面：http://b.test.com/b.html
+                <script>
+	    document.domain='test.com';
+	    console.log(window.parent.user);
+                </script>
+    3. location.hash + iframe：
+        具体实现：A 域（a.html） -> B域（b.html） -> A域（c.html） 
+        参数以修改子窗口 location.hash（例：#user=test）方式传递，
+        b.html 和 c.html 可以通过 wondow.parent 操作上级窗口，也可以在 window.onhashchange 中接收变更的 location.hash。
+    4. window.name + iframe：
+        window.name 在不同页面不同域名加载后依旧存在，并支持 2MB 长度
+        例：
+            A 域（a.html）
+                1. 创建 iframe，src=B域（b.html）
+                2. iframe.onload 中，若为 b.html，iframe.contentWindow.location=A域（c.html）；否则（即为 c.html），获取 b.html 提供的 iframe.contentWindow.name，进行回调操作，并销毁 iframe
+            B域（b.html）
+                设置 window.name
+            A域（c.html）
+                可以为空，仅作代理中转 window.name
+    5. postMessage 跨域
+        postMessage 是 HTML5 XMLHttpRequest Level 2 中的 API，且是为数不多可以跨域操作的 window 属性之一，它可用于解决以下方面的问题：
+            1. 页面和其打开的新窗口的数据传递
+            2. 多窗口之间消息传递
+            3. 页面与嵌套的iframe消息传递
+            4. 上面三个场景的跨域数据传递
+        例：
+            A 域（a.html）
+                iframe.onload：iframe.contentWindow.postMessage(字符串数据, B域);
+                window.addEventListener('message', function(e) {
+	    console.log(e.data); // 接收数据
+	}, false);
+            B域（b.html）
+                window.addEventListener('message', function(e) {
+	    console.log(e.data); // 接收数据
+	    window.parent.postMessage(数据, A 域);
+	}, false);
+    6. 跨域资源共享（CORS）
+        JS：
+            xhr.withCredentials = true;  // 不携带 cookie 可不设置
+        PHP：
+           // 可访问跨域：若有端口需写全（协议+域名+端口），若没有端口末尾不用加'/'
+           header("Access-Control-Allow-Origin", "http://www.domain1.com"); 
+           // 允许前端带认证cookie：启用此项后，上面的域名不能为'*'
+           header("Access-Control-Allow-Credentials", "true"); 
+           // 提示OPTIONS预检时，后端需要设置的两个常用自定义头
+           header("Access-Control-Allow-Headers", "Content-Type,X-Requested-With");
+
+
+https://segmentfault.com/a/1190000011145364dsa
+
+
+

@@ -155,6 +155,8 @@ git安装：
         > git remote -v     # 查看远程地址
     删除远程仓库：
         > git remote remove 远程名
+    删除远程分支：
+        git push 远程名 --delete 分支名
     推送远程(-u非首次可省)：
         > git push -u 远程名 远程分支
     拉至本地：
@@ -273,3 +275,7 @@ github等仓库SSH Key（https://www.cnblogs.com/fly_dragon/p/8718614.html）：
             email = 1479672753@qq.com
 
 git中文开发手册：https://www.php.cn/manual/view/34943.html
+
+清除改变不保存：git clean -df
+
+修改提交说明：git commit --amend -m "说明信息"

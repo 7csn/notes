@@ -25,17 +25,17 @@
 	    class A {}
 	    class B {}
 	    interface F {
-		static function o();
+		    static function o();
 	    }
 	    class AF implements F {
-		static function o() {
-		    return new A();
-		}
+            static function o() {
+                return new A();
+            }
 	    }
 	    class BF implements F {
-		static function o() {
-		    return new B();
-		}
+            static function o() {
+                return new B();
+            }
 	    }
 	优点：子工厂各司其职，相对灵活；子工厂可继承，可重写；
 	缺点：工厂类随着产品类增加而增加
@@ -126,24 +126,24 @@
 5.策略模式
     购买一组产品（每个产品有多家商店生产），通过策略商店，指定各产品的来源商店
     class A {
-	function x() {}
-	function y() {}
+        function x() {}
+        function y() {}
     }
     class B {
-	function x() {}
-	function y() {}
+        function x() {}
+        function y() {}
     }
     class CL {
-	function __construct($x, $y) {
-	    $this->clx = $x;
-	    $this->cly = $y;
-	}
-	function getX() {
-	    $this->clx->x();
-	}
-	function getY() {
-	    $this->cly->y();
-	}
+        function __construct($x, $y) {
+            $this->clx = $x;
+            $this->cly = $y;
+        }
+        function getX() {
+            $this->clx->x();
+        }
+        function getY() {
+            $this->cly->y();
+        }
     }
 6.装饰器模式
     装饰器有很多子类，可以对产品进行各种装饰
@@ -191,8 +191,8 @@
 	}
 	class Baidu {
 	    function pos() {
-		$w = new Word;
-		return $this->trans($w->pos()); 
+            $w = new Word;
+            return $this->trans($w->pos());
 	    }
 	    function trans() {}
 	}

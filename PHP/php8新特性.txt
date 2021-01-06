@@ -1,0 +1,82 @@
+
+01. 联合类型：属性、参数、返回值
+02. JIT（just in time）
+03. 属性（注解）
+04. 新增 static 返回类型
+05. 新增 mixed 类型
+06. throw 从语句转为表达式
+07. 弱映射：弱映射缓存的对象，若没有任何其它引用时，会被垃圾处理机制回收。
+08. 运行对对象使用::class
+09. 捕获异常可忽略变量
+10. 参数列表可以有尾部逗号
+11. 新增 Stringable 接口，类型申明时，对应字符串或实现 __toString() 的类
+12. 从接口创建 DateTime 对象
+        DateTime::createFromInterface(DateTimeInterface $other);
+        DateTimeImmutable::createFromInterface(DateTimeInterface $other);
+13. 新增函数
+        str_contains(string $haystack, $needle): bool
+        str_starts_with(string $haystack, $start): bool
+        str_ends_with(string $haystack, $end);: bool
+        fdiv()
+        get_debug_type()get_resource_id()
+        get_resource_id()
+14. traits 改进抽象方法生效
+15. token_get_all() 返回之数组
+16. 可变语法调整
+
+重大变化：
+1. 一致性的类型错误（内部函数类型错误不再是警告，也抛出 TypeErrors）
+2. 重新分类的引擎警告
+        变量未定义：Error 异常代替通知
+        数组索引未定义：警告代替通知
+        除以零：DivisionByZeroError 异常代替警告
+        尝试添加 / 移除非对象的属性 '% s' ：Error 异常代替警告
+        尝试修改非对象的属性 '% s' ：Error 异常代替警告
+        尝试分配非对象的属性 '% s' ：Error 异常代替警告
+        从空值创建默认对象：Error 异常代替警告
+        尝试获取非对象的属性 '% s' ：警告代替通知
+        未定义的属性：% s::$% s：警告代替通知
+        无法添加元素到数组，因为下一个元素已被占用：Error 异常代替警告
+        无法在非数组变量中销毁偏移量：Error 异常代替警告
+        无法将标量值用作数组：Error 异常代替警告
+        只有数组和 Traversables 可以被解包：TypeError 异常代替警告
+        为 foreach () 提供了无效的参数：TypeError 异常代替警告
+        偏移量类型非法：TypeError 异常代替警告
+        isset 或 empty 中的偏移量类型非法：TypeError 异常代替警告
+        unset 中的偏移量类型非法：TypeError 异常代替警告
+        数组到字符串的转换：警告代替通知
+        资源 ID#% d 用作偏移量，转换为整数 (% d)：警告代替通知
+        发生字符串偏移量转换：警告代替通知
+        未初始化的字符串偏移量：% d：警告代替通知
+        无法将空字符串分配给字符串偏移量：Error 异常代替警告
+        提供的资源不是有效的流资源：TypeError 异常代替警告
+3. @运算符不再屏蔽致命错误，可设置 display_errors=Off 屏蔽。
+4. 默认错误报告级别改为 E_ALL，不再排除 E_NOTICE 和 E_DEPRECATED。
+5. PDO 默认错误模式改为 PDO::ERRMODE_EXCEPTION 。
+6. 串联优先级（例：echo "sum：" . $a + $b; 优先+）
+7. 更严格的算术和位运算类型检查
+8. 反射方法签名变更 $args => ...$args
+9. PHP 7.2 7.3 7.4 弃用确定
+
+PHP 代码执行：接收代码、对其解释、返回结果。
+1. Lex/Tokenize：
+        读取 PHP 代码并将其解释为一组称为 tokens 的关键字。
+2. Parse：
+        PHP 解释器解析 tokens 集合，生成节点集抽象语法树（AST），表示要执行的操作。
+3. Compile：
+        将 AST 转换成过渡的表达式 Opcodes，以便能被 CPU 执行。
+4. Execute：
+        PHP 的 Zend VM 引擎接收 Opcodes 并执行，执行完后终止程序。
+
+Opcache 扩展
+        PHP 附带扩展，使用 PHP 最好打开。
+        作用是为 Opcodes 添加一个内存共享缓存层，工作是从 AST 中提取新生成的 Opcodes 并缓存，以便执行时直接提供给 Zend VM 使用，跳过 Lexing/Tokenizing 、Parsing、Compiling步骤。
+
+JIT 作用
+        JIT 使用了名为 DynASM (Dynamic Assembler) 的库，能将一种特定格式的一组 CPU 指令映射为许多不同 CPU 类型的汇编代码。
+        Zend VM 执行 Opcodes 前，JIT 尝试将有价值的 Opcodes 编译成特定结构体的机器码，跳过 Zend VM 层，直接被 CPU 执行。同时，该编译将作为缓存，下次执行时不再编译。
+
+为什么不把 Opcodes 直接编译，而是 JIT？为什么 JIT 不编译所有内容？
+        因为 PHP 是弱类型语言，Zend VM 尝试执行某个操作码前，PHP 通常不确定变量的类型。
+        另外，使用机器码执行类型推断逻辑也不可行，效率可能更低。
+        先求值再编译也不可取，因为编译为机器码是 CPU 密集性任务。因此，不在运行时编译所有内容。

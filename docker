@@ -1,0 +1,287 @@
+
+卸载
+
+
+镜像仓库：hub.docker.com
+
+容器化技术管理工具，go编写，apache2.0开源协议。
+
+build（创建）、ship（运输）、run（运行）
+
+虚拟机资源利用率：30%。
+docker资源利用率：60%~80%。
+
+镜像：
+    类似虚拟机镜像，可理解为面向docker引擎的只读模板，包含文件系统。
+    创建容器的基础。
+    静态。
+容器：
+    类似于轻量级的沙箱子，用来运行和隔离应用。
+    从镜像创建的应用运行实例，可以启动、开始、停止、更新、删除。
+    动态，具有生命周期的。
+仓库：
+    默认dockerhub：hub.docker.com
+    存放镜像的仓库。
+
+服务端：docker守护进程（本地socket），通过 http/https 协议从 镜像仓库 拉取镜像
+客户端：通过 http/https 协议与服务端进程交互，build、pull、run
+
+docker镜像用于创建并启动容器
+    * 分层构建机制中，最底层为bootfs，上面是rootfs
+        * bootfs：用于系统引导的文件系统，容器启动完后会被卸载以节约内存资源。
+        * rootfs：容器的根文件系统，rootfs由内核挂载为“只读”模式，而后通过“联合挂载”技术额外挂载一个“可写”层。
+
+共享资源：基础镜像+各种软件形成各种容器
+
+AUFS（早期，不支持centos）：
+    高级多层统一文件系统
+    用于为Linux文件系统实现“联合挂载”
+    docker早期使用其作为容器文件系统层
+    docker的分层镜像，除了aufs，还支持device mapper等
+
+linux：Centos、Redhat、Ubuntu、Debian、fedora、Oracle Linux、SUSE
+macOS
+windows
+
+阿里镜像：https://mirrors.aliyun.com
+
+安装：https://docs.docker.com/get-docker/
+    * 版本
+        * Docker-EE：商业版、企业版
+        * Docker-CE：免费版
+
+Centos7安装：https://docs.docker.com/engine/install/centos/
+    * 移除旧版本：
+        > yum remove -y docker \
+        docker-client \
+        docker-client-latest \
+        docker-common \
+        docker-latest \
+        docker-latest-logrotate \
+        docker-logrotate \
+        docker-selinux \
+        docker-engine-selinux \
+        docker-engine
+        > rm -rf /etc/systemd/system/docker.service.d
+        > rm -rf /var/lib/docker
+        > rm -rf /var/run/docker
+        # 查看所有包
+        > rpm -qa|grep -i docker
+        # 继续卸载
+    * 安装 yum-utils 包(它提供 yum-config-manager 实用工具)并设置稳定存储库。
+        > sudo yum install -y yum-utils && sudo yum-config-manager \
+              --add-repo \
+              https://download.docker.com/linux/centos/docker-ce.repo
+    * 重置缓存
+        > sudo yum clean all
+        > sudo yum makecache fast
+    * 安装 docker 引擎 和 containerd.io 组件
+        > sudo yum install docker-ce docker-ce-cli containerd.io
+    * 启动
+        > sudo systemctl start docker
+
+Centos8.1安装：yum -> dnf
+    * 下载 Centos-Base.repo 源
+        > curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-8.repo
+    * 下载 epel.repo 源
+        # 安装配置包
+        > dnf install -y https://mirrors.aliyun.com/epel/epel-release-latest-8.noarch.rpm
+        # 将 epel 配置中的地址改为阿里云镜像站地址
+        > sed -i 's|^#baseurl=https://download.fedoraproject.org/pub|baseurl=https://mirrors.aliyun.com|' /etc/yum.repos
+        .d/epel*
+        > sed -i 's|^metalink|#metalink|' /etc/yum.repos.d/epel*
+    * 下载 docker-ce 源：
+        > curl -o /etc/yum.repo.d/docker-ce.repo https://download.docker.com/linux/centos/docker-ce.repo
+    * 重置缓存
+        > dnf clean all
+        > dnf makecache fast
+    * 安装两个组件
+        > dnf install device-mapper-persistent-data lvm2
+    * 安装 containerd.io 组件
+        > dnf install https://download.docker.com/linux/fedora/30/x86_64/stable/Packages/containerd.io-1.2.6-3.3
+        .fc30.x86_64.rpm
+    * 卸载冲突包
+        > dnf remove podman
+    * 安装 docker 引擎
+        > dnf install docker-ce docker-ce-cli
+    * 启动
+        > systemctl start docker
+
+yum（centos8 -> dnf）:
+    * 源仓库：/etc/yum.repos.d/
+    * 更新或配置yum源后，生成缓存
+        > yum makecache fast
+    * 清除缓存：软件包和header
+        > yum clean all
+
+查找依赖包：
+    > rpm -qa | grep -i 软件名
+
+docker 镜像仓库源的配置
+    * 阿里云（需要注册，推荐使用）：https://用户相关.mirror.aliyuncs.com
+        * 登录 -> 产品（容器服务 ACK）-> 管理控制台 -> 搜索容器镜像服务 -> 镜像中心 -> 镜像加速器
+            例：https://zj86q08m.mirror.aliyuncs.com
+            使用加速器：
+            sudo mkdir -p /etc/docker
+            sudo tee /etc/docker/daemon.json <<-'EOF'
+            {
+              "registry-mirrors": ["https://zj86q08m.mirror.aliyuncs.com"]
+            }
+            EOF
+            sudo systemctl daemon-reload
+            sudo systemctl restart docker
+    * 中国科技大学：https://docker.mirrors.ustc.edu.cn
+    * 网易源：http://hub.mirror.c.163.com
+    * docker 中国区官方镜像：https://registry.docker-cn.com
+
+docker命令（docker --help）:
+
+docker image 指令 仓库:标签
+    * ls        列出所有镜像信息：仓库、标签（默认latest）、ID（前12位）、创建时间、大小
+    * pull      拉取镜像
+        image 可省
+    * push      推送镜像
+    * rm        删除镜像
+    * inspect   查看镜像详细信息
+    * export    导出容器文件系统到tar归档文件
+        > docker container export 容器ID/容器名称 > 路径文件.tar
+    * import    导入tar归档文件创建镜像
+        > docker [image] import 路径文件.tar 仓库:标签
+    * save      导出镜像到一个tar归档文件
+        > docker [image] save 仓库:标签 > 路径名称.tar
+    * load      将一个tar归档文件导入到镜像库中
+        > docker [image] load < 路径名称.tar
+
+docker container 命令简单使用
+    * 启动容器：docker run [options] image [command] [arg...]
+        * options：指定创建容器时的一些功能，常见如下：
+            * --name        手动为容器指定一个名称
+            * -i            以交互模式运行容器，通常和-t同时使用
+            * -t            为容器重新分配一个伪终端，通常和-i同时使用
+            * -d            后台运行容器，并返回容器ID；需指定一个一直运行的前台进程，否则容器会退出
+            * -p            指定端口映射；-p 宿主机端口:容器内部端口
+            * --dns=        指定DNS，可多个
+            * --hostname=   指定主机名
+            * --net=        网络模型：bridge、host、container:指定容器名、none
+            * -v            数据卷设置；宿主机目录绝对路径:容器内目录绝对路径[:ro]  # :ro表示容器内只读
+        例：
+            > docker run -it --name ct7 centos:centos7
+            > docker run -d --name ct7 centos:centos7 /bin/bash -c "while true; do echo hello world; sleep 3; done"
+    * 查看容器：docker ps [options]
+        * -a    列出所有正运行的容器和已停止的容器
+        * -q    只列出容器的ID号
+    * 退出容器：
+        * exit
+        * ctrl+q+p
+    * 启动容器：
+        * docker start 容器ID/容器名称
+    * 重启容器：
+        * docker restart 容器ID/容器名称
+    * 停止容器：
+        * docker stop 容器ID/容器名称
+    * 强制停止容器：
+        * docker kill 容器ID/容器名称
+    * 删除已停止容器：docker rm [options] 容器ID/容器名称
+        * options：
+            * -f    强制删除正运行的容器
+    * 查看容器日志：docker logs [options] 容器ID/容器名称
+        * options：
+            * -f    追加方式打印日志
+    * 查看容器内运行的进程：
+        * docker top 容器ID/容器名称
+    * 查看容器自身详细信息：
+        * docker inspect 容器ID/容器名称
+    * 进入正在运行的容器并进行交互：
+        * docker attach 容器ID/容器名称 [command] [arg...]
+            * 直接进入容器启动命令的终端，不会启动新的进程
+        * docker exec -it 容器ID/容器名称 [command] [arg...]
+            * 在容器中打开新的终端，并且可以启动新的进程
+
+docker commit
+    * 作用：提交容器副本，使之成为新构建的镜像
+    * 使用语法：
+        * docker commit -m "描述" 容器ID/容器名称 仓库:标签
+
+docker数据卷：
+    数据卷设计目的就是数据的持久化，可用于持续存储或共享数据。
+    数据卷完全独立于容器的生命周期，docker不会再删除容器时删除其挂载的数据卷。
+
+    特点：
+        * 数据卷可在容器之间共享或重用数据
+        * 在数据卷中的更改可以直接生效
+        * 数据卷的更改不会包含在镜像的更新中
+        * 数据卷的生命周期一直持续到没有容器使用它为止
+
+    使用语法:
+        # :ro 表示容器内只读
+        > docker run -it -v 宿主机目录绝对路径:容器内目录绝对路径[:ro] 容器名 仓库:标签
+
+查看端口：ss -tnl
+
+docker网络方面简单配置：
+    1. 查看docker容器IP地址
+        1. 容器中
+            > hostname -i   # 主机名地址
+            > hostname -I   # 主机所有地址
+            > ifconifg  # 需安装包：yum install -y net-tools
+            > cat /etc/hosts | grep 容器短ID
+        2. 宿主机
+            > docker inspect 容器ID/容器名 | grep IPAddress
+            > docker inspect 容器ID/容器名 -f "{{ .NetworkSettings.IPAddress }}"
+    2. 给docker容器配置DNS
+        1. 进入容器，配置/etc/resolv.conf
+        2. docker run --dns=指定DNS1 --dns=指定DNS2 ...
+        3. /etc/docker/daemon.json添加dns列表项，如
+            "dns": ["223.5.5.5"]
+    3. 给docker容器配置主机名
+        1. docker run --hostname=指定主机名
+
+显示操作ip路由表：route -n  # 依赖 net-tools 包
+显示网络设备：ifconfig  # 依赖 net-tools 包
+查询网桥命令：brctl show    # 依赖 bridge-utils 包
+
+容器启动，会产生一个veth开头的网桥，在容器内修改为eth0
+
+
+容器网络模型（docker run --net=网络模型）：
+    * bridge
+        * 默认网络模型，docker启动后默认创建一个docker0网桥，默认创建的容器也是添加到这个网桥中
+    * host
+        * 容器和宿主机共享一个网络名称空间
+        * 这种方式启动容器，不需要映射端口
+    * container
+        * 和已经存在的容器使用同一个网络名称空间，网卡配置也都是相同的
+        > docker run --net=container:指定容器名称 ...
+    * none
+        * 不为容器进行任何网络配置
+
+> docker network ls
+
+> docker network inspect bridge
+
+自定义容器网络
+    * docker的三种网络驱动支持：
+        * bridge：自定义bridge，是单机网络多容器通信的最佳选择
+        * overlay：分布式多容器宿主
+        * macvlan：可用于给容器设置mac地址，模拟网络中真实的物理设备
+    * docker自定义bridge的好处：
+        * 提供了更好的网络隔离性和相互操作性
+        * 同一个自定义bridge下的容器可以互相访问所有端口，不需要暴露端口到外部
+        * 容器之间可以自定解析主机名和ip的对应关系
+        * 可时多个用户自定义网络，且每个容器指定ip地址
+    * 之定义bridge网络的语法：
+        > docker network create [-d bridge --subnet 172.20.0.0/24 --gateway 172.20.0.1] myNet
+        > docker run -it --network=myNet [--ip=172.20.0.100] --name cs centos:centos7
+
+# 安装 mysql 客户端
+> yum install mariadb
+# 安装 mysql 服务器
+> yum install mariadb-server
+
+Dockerfile 构建命令：docker build [options] .
+    * options：
+        * -t    给新构建的镜像取名，格式为 仓库:标签
+        * -f    指定构建镜像的Dockerfile文件，默认去找当前路径下名为“dockerfile”的文件
+    * 点表示当前目录
+
+删除无名镜像：docker rmi $(docker images -f "dangling=true" -q)

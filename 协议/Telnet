@@ -1,2 +1,5 @@
 输入：telnet 域名[/IP] 端口
 按键：Enter ctrl+] Enter
+
+输入：nc -u IP 端口号
+输入信息并按Enter

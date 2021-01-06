@@ -1,0 +1,13 @@
+时序攻击：验证密码未经加密直接对比验证，字符串逐个比较，不同则立即返回；攻击者通过计算返回速度判断不同位置，大量尝试下，可以实现按位破解密码。
+
+token_get_all：将提供的源码按 PHP 标记进行分割
+
+对象方法 protected 和 private 区别：
+    public：可以在任何地方引用
+    protected：只能在类中引用，$this->、parent::
+    private：只能在本类引用，$this->、self::
+
+PHP 性能追溯
+> time [选项参数] PHP命令
+> trace [选项参数] PHP命令
+> ltrace [选项参数] PHP命令
