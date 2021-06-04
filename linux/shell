@@ -183,3 +183,6 @@ shell编程
     crontab -e
     0 0 * * * /home/csn/go.sh
 
+批量关闭进程：
+> ps -ef|grep '关键字'|grep -v grep|cut -c 9-15|xargs kill -9
+

@@ -13,6 +13,9 @@ composer：php类库管理工具
     > composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
     > composer config -g repo.packagist composer https://mirrors.cloud.tencent.com/composer/
 
+新版本（2021）稳定性依赖bug：
+    > composer config -g repo.packagist composer https://packagist.org
+
 不限内存安装软件：
     > php -d memory_limit=-1 /usr/local/bin/composer require 软件包
 
